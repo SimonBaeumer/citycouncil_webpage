@@ -230,6 +230,7 @@
 <div class="main">
   <div class="video-panel">
     <div id="player-placeholder">Select a meeting above to load the recording.</div>
+    <div id="player-error" style="display:none;color:#f87171;font-size:0.9rem;text-align:center;">No video link available for this session.</div>
     <div id="player"></div>
   </div>
 
@@ -3713,7 +3714,7 @@
   },
   "2025-12-18-03-20_171716": {
     "title": "2025-18-12",
-    "youtube_url": "",
+    "youtube_url": "https://youtu.be/LEfgnbAL3YY",
     "discussions": [
       {
         "id": "15",
@@ -4735,7 +4736,7 @@
   },
   "2026-01-26-2026-03-20_171946": {
     "title": "2026-01-26",
-    "youtube_url": "",
+    "youtube_url": "https://youtu.be/aSyP8D8pS5c",
     "discussions": [
       {
         "id": "1",
@@ -7819,7 +7820,7 @@
   },
   "2026-02-25-2026-03-20_172049": {
     "title": "2026-02-25",
-    "youtube_url": "",
+    "youtube_url": "https://youtu.be/qYaAjijoQCs",
     "discussions": [
       {
         "id": ".",
@@ -12642,9 +12643,14 @@
     var session = SESSIONS_DATA[id];
     if (!session) return;
 
+    var errorEl = document.getElementById('player-error');
     if (session.youtube_url) {
+      errorEl.style.display = 'none';
       document.getElementById('youtube-input').value = session.youtube_url;
       loadVideo();
+    } else {
+      errorEl.style.display = 'block';
+      document.getElementById('player-placeholder').style.display = 'none';
     }
 
     buildTimeline(session.discussions, session.votes);
