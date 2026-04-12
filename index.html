@@ -53,18 +53,6 @@
 
     #youtube-input::placeholder { color: #555; }
 
-    #load-btn {
-      padding: 6px 14px;
-      border-radius: 6px;
-      border: none;
-      background: #3b5bdb;
-      color: #fff;
-      font-size: 0.875rem;
-      cursor: pointer;
-    }
-
-    #load-btn:hover { background: #4c6ef5; }
-
     .main {
       display: flex;
       flex: 1;
@@ -163,15 +151,80 @@
       flex-shrink: 0;
       align-self: center;
     }
+
+    #login-overlay {
+      position: fixed;
+      inset: 0;
+      background: #0f1117;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    #login-box {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 10px;
+      padding: 32px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 300px;
+    }
+
+    #login-box h2 {
+      font-size: 1rem;
+      color: #fff;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    #login-box input {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #3a3d4a;
+      background: #0f1117;
+      color: #e0e0e0;
+      font-size: 0.875rem;
+      width: 100%;
+    }
+
+    #login-box button {
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      background: #3b5bdb;
+      color: #fff;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+
+    #login-box button:hover { background: #4c6ef5; }
+
+    #login-error {
+      font-size: 0.8rem;
+      color: #f87171;
+      display: none;
+    }
   </style>
 </head>
 <body>
 
+<div id="login-overlay">
+  <div id="login-box">
+    <h2>City Council Analyzer</h2>
+    <input id="login-user" type="text" placeholder="Username" autocomplete="username" />
+    <input id="login-pass" type="password" placeholder="Password" autocomplete="current-password" />
+    <span id="login-error">Invalid username or password.</span>
+    <button onclick="doLogin()">Sign in</button>
+  </div>
+</div>
+
 <header>
   <h1>City Council Analyzer</h1>
   <select id="session-picker" onchange="onSessionChange()"></select>
-  <input id="youtube-input" type="text" placeholder="YouTube URL or video ID" />
-  <button id="load-btn" onclick="loadVideo()">Load</button>
+  <input id="youtube-input" type="text" placeholder="YouTube URL or video ID" onkeydown="if(event.key==='Enter')loadVideo()" />
 </header>
 
 <div class="main">
@@ -185,6 +238,34 @@
     <div id="timeline"></div>
   </aside>
 </div>
+
+<script>
+  (function() {
+    var overlay = document.getElementById('login-overlay');
+    var passInput = document.getElementById('login-pass');
+
+    if (localStorage.getItem('cca_auth') === '1') {
+      overlay.style.display = 'none';
+    }
+
+    passInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doLogin();
+    });
+
+    window.doLogin = function() {
+      var user = document.getElementById('login-user').value;
+      var pass = document.getElementById('login-pass').value;
+      if (user === 'gruene' && pass === 'stadtrat') {
+        localStorage.setItem('cca_auth', '1');
+        overlay.style.display = 'none';
+      } else {
+        document.getElementById('login-error').style.display = 'block';
+        passInput.value = '';
+        passInput.focus();
+      }
+    };
+  })();
+</script>
 
 <script>
   // Embedded data — no server needed
@@ -12430,36 +12511,48 @@
   var player = null;
   var playerReady = false;
   var pendingSeek = null;
+  var pendingVideoId = null;
 
   var tag = document.createElement('script');
   tag.src = "https://www.youtube.com/iframe_api";
   document.head.appendChild(tag);
 
-  function onYouTubeIframeAPIReady() {}
+  function onYouTubeIframeAPIReady() {
+    if (pendingVideoId) {
+      createPlayer(pendingVideoId);
+      pendingVideoId = null;
+    }
+  }
+
+  function createPlayer(videoId) {
+    document.getElementById('player-placeholder').style.display = 'none';
+    player = new YT.Player('player', {
+      videoId: videoId,
+      playerVars: { playsinline: 1, rel: 0 },
+      events: {
+        onReady: function() {
+          playerReady = true;
+          if (pendingSeek !== null) {
+            player.seekTo(pendingSeek, true);
+            player.playVideo();
+            pendingSeek = null;
+          }
+        }
+      }
+    });
+  }
 
   function loadVideo() {
     var raw = document.getElementById('youtube-input').value.trim();
     if (!raw) return;
     var videoId = extractVideoId(raw);
     if (!videoId) return;
-    document.getElementById('player-placeholder').style.display = 'none';
     if (player) {
       player.loadVideoById(videoId);
+    } else if (typeof YT !== 'undefined' && YT.Player) {
+      createPlayer(videoId);
     } else {
-      player = new YT.Player('player', {
-        videoId: videoId,
-        playerVars: { playsinline: 1, rel: 0 },
-        events: {
-          onReady: function() {
-            playerReady = true;
-            if (pendingSeek !== null) {
-              player.seekTo(pendingSeek, true);
-              player.playVideo();
-              pendingSeek = null;
-            }
-          }
-        }
-      });
+      pendingVideoId = videoId;
     }
   }
 
@@ -12537,6 +12630,9 @@
     entries.forEach(function(e) {
       timeline.appendChild(makeItem(e.seconds, e.id, e.label, e.isVote));
     });
+
+    var first = timeline.querySelector('.item');
+    if (first) first.click();
   }
 
   function onSessionChange() {
