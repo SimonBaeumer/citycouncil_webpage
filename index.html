@@ -41,17 +41,18 @@
       min-width: 180px;
     }
 
+
     #youtube-input {
-      flex: 1;
+      max-width: 160px;
       padding: 6px 10px;
       border-radius: 6px;
-      border: 1px solid #3a3d4a;
-      background: #0f1117;
-      color: #e0e0e0;
+      border: 1px solid #2a2d3a;
+      background: transparent;
+      color: #666;
       font-size: 0.875rem;
+      cursor: default;
+      pointer-events: none;
     }
-
-    #youtube-input::placeholder { color: #555; }
 
     .main {
       display: flex;
@@ -209,18 +210,19 @@
     }
 
     #share-btn {
-      padding: 6px 12px;
+      padding: 6px 14px;
       border-radius: 6px;
-      border: 1px solid #3a3d4a;
-      background: #1a1d27;
-      color: #e0e0e0;
+      border: 1px solid #3b5bdb;
+      background: #1e2a4a;
+      color: #7c9ef8;
       font-size: 0.875rem;
+      font-weight: 500;
       cursor: pointer;
       white-space: nowrap;
       flex-shrink: 0;
     }
-    #share-btn:hover { background: #22263a; }
-    #share-btn.copied { color: #4ade80; border-color: #4ade80; }
+    #share-btn:hover { background: #253660; border-color: #4c6ef5; color: #a5b4fc; }
+    #share-btn.copied { color: #4ade80; border-color: #4ade80; background: #0d2a1a; }
   </style>
 </head>
 <body>
@@ -238,8 +240,8 @@
 <header>
   <h1>City Council Analyzer</h1>
   <select id="session-picker" onchange="onSessionChange()"></select>
-  <input id="youtube-input" type="text" placeholder="YouTube URL or video ID" onkeydown="if(event.key==='Enter')loadVideo()" />
-  <button id="share-btn" onclick="shareCurrentPosition()">Share</button>
+  <input id="youtube-input" type="text" readonly />
+  <button id="share-btn" onclick="shareCurrentPosition()">🔗 Copy link</button>
 </header>
 
 <div class="main">
@@ -17087,48 +17089,8 @@
         "id": "1",
         "title": "1 Eröffnung und Begrüßung",
         "start_frame": 250,
-        "end_frame": 750,
-        "start_time": "00:00:10",
-        "end_time": "00:00:30",
-        "reference_number": "",
-        "title_text": "Eröffnung und Begrüßung"
-      },
-      {
-        "id": "7",
-        "title": "1 Eröffnung und Begrüßung",
-        "start_frame": 750,
-        "end_frame": 1000,
-        "start_time": "00:00:30",
-        "end_time": "00:00:40",
-        "reference_number": "",
-        "title_text": "Eröffnung und Begrüßung"
-      },
-      {
-        "id": "1",
-        "title": "1 Eröffnung und Begrüßung",
-        "start_frame": 1000,
-        "end_frame": 6250,
-        "start_time": "00:00:40",
-        "end_time": "00:04:12",
-        "reference_number": "",
-        "title_text": "Eröffnung und Begrüßung"
-      },
-      {
-        "id": "7",
-        "title": "1 Eröffnung und Begrüßung",
-        "start_frame": 6250,
-        "end_frame": 6500,
-        "start_time": "00:04:12",
-        "end_time": "00:04:23",
-        "reference_number": "",
-        "title_text": "Eröffnung und Begrüßung"
-      },
-      {
-        "id": "1",
-        "title": "1 Eröffnung und Begrüßung",
-        "start_frame": 6500,
         "end_frame": 12000,
-        "start_time": "00:04:23",
+        "start_time": "00:00:10",
         "end_time": "00:08:05",
         "reference_number": "",
         "title_text": "Eröffnung und Begrüßung"
@@ -17234,21 +17196,11 @@
         "title_text": "interimistische Bestellung der Geschäftsführung der Verwaltungs- und Wirtschafts-Akademie Leipzig GmbH"
       },
       {
-        "id": "1",
-        "title": "11 Anträge zur Aufnahme in die Tagesordnung",
-        "start_frame": 33250,
-        "end_frame": 33500,
-        "start_time": "00:22:25",
-        "end_time": "00:22:36",
-        "reference_number": "",
-        "title_text": "Anträge zur Aufnahme in die Tagesordnung"
-      },
-      {
         "id": "11",
         "title": "11 Anträge zur Aufnahme in die Tagesordnung",
-        "start_frame": 33500,
+        "start_frame": 33250,
         "end_frame": 33750,
-        "start_time": "00:22:36",
+        "start_time": "00:22:25",
         "end_time": "00:22:46",
         "reference_number": "",
         "title_text": "Anträge zur Aufnahme in die Tagesordnung"
@@ -17447,68 +17399,8 @@
         "id": "13",
         "title": "13 Anfragen von Einwohnerinnen und Einwohnern",
         "start_frame": 267750,
-        "end_frame": 269250,
-        "start_time": "03:00:38",
-        "end_time": "03:01:39",
-        "reference_number": "",
-        "title_text": "Anfragen von Einwohnerinnen und Einwohnern"
-      },
-      {
-        "id": "13",
-        "title": "13 Anfragen von Einwohnerinnen und Einwohnern",
-        "start_frame": 270000,
-        "end_frame": 270750,
-        "start_time": "03:02:09",
-        "end_time": "03:02:39",
-        "reference_number": "",
-        "title_text": "Anfragen von Einwohnerinnen und Einwohnern"
-      },
-      {
-        "id": "13",
-        "title": "13 Anfragen von Einwohnerinnen und Einwohnern",
-        "start_frame": 271000,
-        "end_frame": 271750,
-        "start_time": "03:02:50",
-        "end_time": "03:03:20",
-        "reference_number": "",
-        "title_text": "Anfragen von Einwohnerinnen und Einwohnern"
-      },
-      {
-        "id": "13",
-        "title": "13 Anfragen von Einwohnerinnen und Einwohnern",
-        "start_frame": 272000,
-        "end_frame": 276250,
-        "start_time": "03:03:30",
-        "end_time": "03:06:22",
-        "reference_number": "",
-        "title_text": "Anfragen von Einwohnerinnen und Einwohnern"
-      },
-      {
-        "id": "13",
-        "title": "13 Anfragen von Einwohnerinnen und Einwohnern",
-        "start_frame": 277000,
-        "end_frame": 277500,
-        "start_time": "03:06:52",
-        "end_time": "03:07:13",
-        "reference_number": "",
-        "title_text": "Anfragen von Einwohnerinnen und Einwohnern"
-      },
-      {
-        "id": "13",
-        "title": "13 Anfragen von Einwohnerinnen und Einwohnern",
-        "start_frame": 279500,
-        "end_frame": 280500,
-        "start_time": "03:08:34",
-        "end_time": "03:09:14",
-        "reference_number": "",
-        "title_text": "Anfragen von Einwohnerinnen und Einwohnern"
-      },
-      {
-        "id": "13",
-        "title": "13 Anfragen von Einwohnerinnen und Einwohnern",
-        "start_frame": 280750,
         "end_frame": 284500,
-        "start_time": "03:09:24",
+        "start_time": "03:00:38",
         "end_time": "03:11:56",
         "reference_number": "",
         "title_text": "Anfragen von Einwohnerinnen und Einwohnern"
@@ -17587,138 +17479,8 @@
         "id": "15",
         "title": "15 Anfragen an den Oberbürgermeister",
         "start_frame": 324750,
-        "end_frame": 330000,
-        "start_time": "03:39:05",
-        "end_time": "03:42:38",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "15",
-        "title": "15 Anfragen an den Oberbürgermeister",
-        "start_frame": 330250,
-        "end_frame": 334000,
-        "start_time": "03:42:48",
-        "end_time": "03:45:20",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "15",
-        "title": "15 Anfragen an den Oberbürgermeister",
-        "start_frame": 334250,
-        "end_frame": 334500,
-        "start_time": "03:45:30",
-        "end_time": "03:45:40",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "15",
-        "title": "15 Anfragen an den Oberbürgermeister",
-        "start_frame": 334750,
-        "end_frame": 335500,
-        "start_time": "03:45:50",
-        "end_time": "03:46:21",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "15",
-        "title": "15 Anfragen an den Oberbürgermeister",
-        "start_frame": 336000,
-        "end_frame": 337000,
-        "start_time": "03:46:41",
-        "end_time": "03:47:21",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "15",
-        "title": "15 Anfragen an den Oberbürgermeister",
-        "start_frame": 337250,
-        "end_frame": 347500,
-        "start_time": "03:47:31",
-        "end_time": "03:54:26",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "95",
-        "title": "15 Anfragen an den Oberbürgermeister",
-        "start_frame": 347500,
-        "end_frame": 347750,
-        "start_time": "03:54:26",
-        "end_time": "03:54:36",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "15",
-        "title": "5 Anfragen an den Oberbürgermeister",
-        "start_frame": 347750,
-        "end_frame": 349500,
-        "start_time": "03:54:36",
-        "end_time": "03:55:47",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "15",
-        "title": "15 Anfragen an den Oberbürgermeister",
-        "start_frame": 349750,
-        "end_frame": 362000,
-        "start_time": "03:55:57",
-        "end_time": "04:04:13",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "15",
-        "title": "15 Anfragen an den Oberbürgermeister",
-        "start_frame": 362750,
-        "end_frame": 363500,
-        "start_time": "04:04:44",
-        "end_time": "04:05:14",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "15",
-        "title": "15 Anfragen an den Oberbürgermeister",
-        "start_frame": 363750,
-        "end_frame": 379500,
-        "start_time": "04:05:24",
-        "end_time": "04:16:02",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "15",
-        "title": "15 Anfragen an den Oberbürgermeister",
-        "start_frame": 380000,
-        "end_frame": 380500,
-        "start_time": "04:16:22",
-        "end_time": "04:16:42",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "15",
-        "title": "15 Anfragen an den Oberbürgermeister",
-        "start_frame": 381000,
-        "end_frame": 381250,
-        "start_time": "04:17:02",
-        "end_time": "04:17:12",
-        "reference_number": "",
-        "title_text": "Anfragen an den Oberbürgermeister"
-      },
-      {
-        "id": "15",
-        "title": "15 Anfragen an den Oberbürgermeister",
-        "start_frame": 381500,
         "end_frame": 386000,
-        "start_time": "04:17:23",
+        "start_time": "03:39:05",
         "end_time": "04:20:25",
         "reference_number": "",
         "title_text": "Anfragen an den Oberbürgermeister"
@@ -17727,81 +17489,11 @@
         "id": "16",
         "title": "16 Bericht des Oberbürgermeisters",
         "start_frame": 386500,
-        "end_frame": 386750,
-        "start_time": "04:20:45",
-        "end_time": "04:20:55",
-        "reference_number": "",
-        "title_text": "Bericht des Oberbürgermeisters"
-      },
-      {
-        "id": "16",
-        "title": "16 Bericht des Oberbürgermeisters",
-        "start_frame": 387000,
-        "end_frame": 388750,
-        "start_time": "04:21:05",
-        "end_time": "04:22:16",
-        "reference_number": "",
-        "title_text": "Bericht des Oberbürgermeisters"
-      },
-      {
-        "id": "16",
-        "title": "16 Bericht des Oberbürgermeisters",
-        "start_frame": 389000,
-        "end_frame": 390750,
-        "start_time": "04:22:26",
-        "end_time": "04:23:37",
-        "reference_number": "",
-        "title_text": "Bericht des Oberbürgermeisters"
-      },
-      {
-        "id": "16",
-        "title": "16 Bericht des Oberbürgermeisters",
-        "start_frame": 391000,
-        "end_frame": 400500,
-        "start_time": "04:23:47",
-        "end_time": "04:30:12",
-        "reference_number": "",
-        "title_text": "Bericht des Oberbürgermeisters"
-      },
-      {
-        "id": "16",
-        "title": "16 Bericht des Oberbürgermeisters",
-        "start_frame": 400750,
-        "end_frame": 402750,
-        "start_time": "04:30:22",
-        "end_time": "04:31:43",
-        "reference_number": "",
-        "title_text": "Bericht des Oberbürgermeisters"
-      },
-      {
-        "id": "16",
-        "title": "16 Bericht des Oberbürgermeisters",
-        "start_frame": 403000,
-        "end_frame": 405250,
-        "start_time": "04:31:53",
-        "end_time": "04:33:24",
-        "reference_number": "",
-        "title_text": "Bericht des Oberbürgermeisters"
-      },
-      {
-        "id": "16",
-        "title": "16 Bericht des Oberbürgermeisters",
-        "start_frame": 405500,
-        "end_frame": 408000,
-        "start_time": "04:33:34",
-        "end_time": "04:35:15",
-        "reference_number": "",
-        "title_text": "Bericht des Oberbürgermeisters"
-      },
-      {
-        "id": "16",
-        "title": "16Bericht des Oberbürgermeisters",
-        "start_frame": 408250,
         "end_frame": 408750,
-        "start_time": "04:35:25",
+        "start_time": "04:20:45",
         "end_time": "04:35:46",
         "reference_number": "",
-        "title_text": "16Bericht des Oberbürgermeisters"
+        "title_text": "Bericht des Oberbürgermeisters"
       },
       {
         "id": "18.3",
@@ -17997,48 +17689,8 @@
         "id": "18.13",
         "title": "18.13 VIII-DS-01791 Bebauungsplan Nr. 490 „Wohngebiet östlich Karl-Mannsfeld-Straße\", Stadtbezirk: Nordwest, Ortsteil: Lindenthal; Aufstellungsbeschluss",
         "start_frame": 580250,
-        "end_frame": 605000,
-        "start_time": "06:31:28",
-        "end_time": "06:48:10",
-        "reference_number": "VIII-DS-01791",
-        "title_text": "Bebauungsplan Nr. 490 „Wohngebiet östlich Karl-Mannsfeld-Straße\", Stadtbezirk: Nordwest, Ortsteil: Lindenthal; Aufstellungsbeschluss"
-      },
-      {
-        "id": "78.13",
-        "title": "13 VIII-DS-01791 Bebauungsplan Nr. 490 „Wohngebiet Östlich Karl-Mannsfeld-Straße\", Stadtbezirk: Nordwest, Ortsteil: Lindenthal; Aufstellungsbeschluss",
-        "start_frame": 605000,
-        "end_frame": 605250,
-        "start_time": "06:48:10",
-        "end_time": "06:48:20",
-        "reference_number": "VIII-DS-01791",
-        "title_text": "Bebauungsplan Nr. 490 „Wohngebiet Östlich Karl-Mannsfeld-Straße\", Stadtbezirk: Nordwest, Ortsteil: Lindenthal; Aufstellungsbeschluss"
-      },
-      {
-        "id": "78.73",
-        "title": "3 VIII-DS-01791 Bebauungsplan Nr. 490 „Wohngebiet östlich Karl-Mannsfeld-Straße\", Stadtbezirk: Nordwest, Ortsteil: Lindenthal; Aufstellungsbeschluss",
-        "start_frame": 605250,
-        "end_frame": 606000,
-        "start_time": "06:48:20",
-        "end_time": "06:48:50",
-        "reference_number": "VIII-DS-01791",
-        "title_text": "Bebauungsplan Nr. 490 „Wohngebiet östlich Karl-Mannsfeld-Straße\", Stadtbezirk: Nordwest, Ortsteil: Lindenthal; Aufstellungsbeschluss"
-      },
-      {
-        "id": "78.13",
-        "title": "8.13 VIII-DS-01791 Bebauungsplan Nr. 490 „Wohngebiet östlich Karl-Mannsfeld-Straße\", Stadtbezirk: Nordwest, Ortsteil: Lindentha(; Aufstellungsbeschluss",
-        "start_frame": 606000,
-        "end_frame": 606500,
-        "start_time": "06:48:50",
-        "end_time": "06:49:11",
-        "reference_number": "VIII-DS-01791",
-        "title_text": "Bebauungsplan Nr. 490 „Wohngebiet östlich Karl-Mannsfeld-Straße\", Stadtbezirk: Nordwest, Ortsteil: Lindentha(; Aufstellungsbeschluss"
-      },
-      {
-        "id": "18.13",
-        "title": "18.13 VIII-DS-01791 Bebauungsplan Nr. 490 „Wohngebiet östlich Karl-Mannsfeld-Straße\", Stadtbezirk: Nordwest, Ortsteil: Lindenthal; Aufstellungsbeschluss",
-        "start_frame": 606500,
         "end_frame": 611250,
-        "start_time": "06:49:11",
+        "start_time": "06:31:28",
         "end_time": "06:52:23",
         "reference_number": "VIII-DS-01791",
         "title_text": "Bebauungsplan Nr. 490 „Wohngebiet östlich Karl-Mannsfeld-Straße\", Stadtbezirk: Nordwest, Ortsteil: Lindenthal; Aufstellungsbeschluss"
@@ -20059,9 +19711,9 @@
       '?session=' + encodeURIComponent(sessionId) + '&t=' + t;
     var btn = document.getElementById('share-btn');
     function flash() {
-      btn.textContent = 'Copied!';
+      btn.textContent = '✓ Copied!';
       btn.classList.add('copied');
-      setTimeout(function() { btn.textContent = 'Share'; btn.classList.remove('copied'); }, 1500);
+      setTimeout(function() { btn.textContent = '🔗 Copy link'; btn.classList.remove('copied'); }, 1500);
     }
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url).then(flash).catch(function() { window.prompt('Copy link:', url); });
@@ -20073,6 +19725,8 @@
   function onSessionChange() {
     var id = document.getElementById('session-picker').value;
     if (!id) return;
+    if (id === '__newer__') { renderPage(currentPage - 1); picker.value = sessionIds[currentPage * PAGE_SIZE]; onSessionChange(); return; }
+    if (id === '__older__') { renderPage(currentPage + 1); picker.value = sessionIds[currentPage * PAGE_SIZE]; onSessionChange(); return; }
 
     var session = SESSIONS_DATA[id];
     if (!session) return;
@@ -20080,7 +19734,8 @@
     var errorEl = document.getElementById('player-error');
     if (session.youtube_url) {
       errorEl.style.display = 'none';
-      document.getElementById('youtube-input').value = session.youtube_url;
+      var vid = extractVideoId(session.youtube_url);
+      document.getElementById('youtube-input').value = vid ? 'youtu.be/' + vid : session.youtube_url;
       loadVideo();
     } else {
       errorEl.style.display = 'block';
@@ -20091,21 +19746,60 @@
   }
 
   // Populate session picker and apply URL params (?session=&t=)
+  var MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var PAGE_SIZE = 5;
+
+  function formatTitle(title) {
+    var m = title.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return title + ' – ' + MONTH_ABBR[parseInt(m[2], 10) - 1];
+    return title;
+  }
+
+  function makeOption(id) {
+    var opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = formatTitle(SESSIONS_DATA[id].title);
+    return opt;
+  }
+
   var picker = document.getElementById('session-picker');
-  var sessionIds = Object.keys(SESSIONS_DATA);
+  // Newest first
+  var sessionIds = Object.keys(SESSIONS_DATA).reverse();
+  var currentPage = 0;
+
+  function renderPage(page) {
+    var total = sessionIds.length;
+    var start = page * PAGE_SIZE;
+    var end = Math.min(start + PAGE_SIZE, total);
+    picker.innerHTML = '';
+    if (start > 0) {
+      var newerOpt = document.createElement('option');
+      newerOpt.value = '__newer__';
+      newerOpt.textContent = '▴ Newer…';
+      picker.appendChild(newerOpt);
+    }
+    for (var i = start; i < end; i++) {
+      picker.appendChild(makeOption(sessionIds[i]));
+    }
+    if (end < total) {
+      var olderOpt = document.createElement('option');
+      olderOpt.value = '__older__';
+      olderOpt.textContent = '▾ Older…';
+      picker.appendChild(olderOpt);
+    }
+    currentPage = page;
+  }
+
   if (sessionIds.length === 0) {
     picker.style.display = 'none';
   } else {
-    sessionIds.forEach(function(id) {
-      var opt = document.createElement('option');
-      opt.value = id;
-      opt.textContent = SESSIONS_DATA[id].title;
-      picker.appendChild(opt);
-    });
+    renderPage(0);
     var urlParams = new URLSearchParams(window.location.search);
     var sessionParam = urlParams.get('session');
     var tParam = parseInt(urlParams.get('t') || '0') || 0;
     if (sessionParam && SESSIONS_DATA[sessionParam]) {
+      var idx = sessionIds.indexOf(sessionParam);
+      if (idx >= 0) renderPage(Math.floor(idx / PAGE_SIZE));
       picker.value = sessionParam;
     }
     onSessionChange();
