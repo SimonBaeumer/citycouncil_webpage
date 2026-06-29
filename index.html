@@ -237,6 +237,11 @@
       font-size: 0.85rem;
       color: #ccc;
       line-height: 1.3;
+      /* Let long agenda titles shrink/wrap so the Vorlage link (margin-left:auto)
+         stays in view instead of being pushed off the right edge. */
+      flex: 1;
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .item.vote .item-label {
