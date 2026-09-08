@@ -166,6 +166,17 @@
 
     .item-vorlage-link:hover { color: #6f8cff; }
 
+    .item-vote-link {
+      font-size: 0.7rem;
+      color: #4ade80;
+      text-decoration: none;
+      flex-shrink: 0;
+      padding: 0 2px;
+      white-space: nowrap;
+    }
+
+    .item-vote-link:hover { color: #86efac; text-decoration: underline; }
+
     .item-speakers {
       display: none;
       flex-direction: column;
@@ -332,6 +343,21 @@
     }
     #share-btn:hover { background: #253660; border-color: #4c6ef5; color: #a5b4fc; }
     #share-btn.copied { color: #4ade80; border-color: #4ade80; background: #0d2a1a; }
+
+    #votes-link {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #3b5bdb;
+      background: #1e2a4a;
+      color: #7c9ef8;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    #votes-link:hover { background: #253660; border-color: #4c6ef5; color: #a5b4fc; }
   </style>
 </head>
 <body>
@@ -351,6 +377,7 @@
   <select id="session-picker" onchange="onSessionChange()"></select>
   <input id="youtube-input" type="text" readonly />
   <button id="share-btn" onclick="shareCurrentPosition()">🔗 Copy link</button>
+  <a id="votes-link" href="votes.html" title="Abstimmungsergebnisse">Abstimmungen →</a>
 </header>
 
 <div class="main">
@@ -3517,6 +3544,7 @@
         ]
       }
     ],
+    "vote_keys": [],
     "speakers": []
   },
   "2025-12-18": {
@@ -4524,6 +4552,7 @@
         ]
       }
     ],
+    "vote_keys": [],
     "speakers": []
   },
   "2026-01-26": {
@@ -7281,6 +7310,7 @@
         ]
       }
     ],
+    "vote_keys": [],
     "speakers": []
   },
   "2026-02-25": {
@@ -9995,6 +10025,7 @@
         ]
       }
     ],
+    "vote_keys": [],
     "speakers": []
   },
   "2026-03-25": {
@@ -13582,6 +13613,7 @@
         ]
       }
     ],
+    "vote_keys": [],
     "speakers": []
   },
   "2026-03-26": {
@@ -15021,6 +15053,7 @@
         ]
       }
     ],
+    "vote_keys": [],
     "speakers": []
   },
   "2026-04-29": {
@@ -16898,6 +16931,7 @@
       }
     ],
     "votes": [],
+    "vote_keys": [],
     "speakers": [
       {
         "id": "gruene_nicole_schreyer_krieg",
@@ -27138,6 +27172,7 @@
       }
     ],
     "votes": [],
+    "vote_keys": [],
     "speakers": [
       {
         "id": "gruene_nicole_schreyer_krieg",
@@ -31601,6 +31636,7 @@
       }
     ],
     "votes": [],
+    "vote_keys": [],
     "speakers": [
       {
         "id": "gruene_nicole_schreyer_krieg",
@@ -36461,6 +36497,7 @@
       }
     ],
     "votes": [],
+    "vote_keys": [],
     "speakers": [
       {
         "id": "gruene_nicole_schreyer_krieg",
@@ -42679,6 +42716,7 @@
       }
     ],
     "votes": [],
+    "vote_keys": [],
     "speakers": [
       {
         "id": "gruene_nicole_schreyer_krieg",
@@ -46675,8 +46713,36 @@
         "id": "presentation",
         "title": "",
         "start_frame": 65500,
-        "end_frame": 81000,
+        "end_frame": 70250,
         "start_time": "00:43:40",
+        "end_time": "00:46:50",
+        "is_voting": false,
+        "vorlage_link": "",
+        "reference_number": "",
+        "title_text": "",
+        "is_presentation": true,
+        "is_stream_intro": false
+      },
+      {
+        "id": "presentation",
+        "title": "",
+        "start_frame": 70500,
+        "end_frame": 71000,
+        "start_time": "00:47:00",
+        "end_time": "00:47:20",
+        "is_voting": false,
+        "vorlage_link": "",
+        "reference_number": "",
+        "title_text": "",
+        "is_presentation": true,
+        "is_stream_intro": false
+      },
+      {
+        "id": "presentation",
+        "title": "",
+        "start_frame": 71250,
+        "end_frame": 81000,
+        "start_time": "00:47:30",
         "end_time": "00:54:00",
         "is_voting": false,
         "vorlage_link": "",
@@ -46728,193 +46794,11 @@
         "is_stream_intro": false
       },
       {
-        "id": "22",
-        "title": "22 (nichtöffentlich)",
+        "id": "6",
+        "title": "6 Einbringung des Doppelhaushaltes 2027/2028 sowie Haushaltsstrukturkonzept 2027-2031",
         "start_frame": 90750,
-        "end_frame": 91000,
-        "start_time": "01:00:30",
-        "end_time": "01:00:40",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "(nichtöffentlich)",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "202",
-        "title": "6 Einbringung des Doppelhaushaltes 2027/2028 sowie Haushaltsstrukturkonzept\nRedezel\n2027-2031\n5:00",
-        "start_frame": 91000,
-        "end_frame": 91250,
-        "start_time": "01:00:40",
-        "end_time": "01:00:50",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "22",
-        "title": "22 (nichtöffentlich)",
-        "start_frame": 91250,
-        "end_frame": 91500,
-        "start_time": "01:00:50",
-        "end_time": "01:01:00",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "(nichtöffentlich)",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "202",
-        "title": "6 Einbringung des Doppelhaushaltes 2027/2028 sowie Haushaltsstrukturkonzept\nRedozoit\n2027-2031\n5:00",
-        "start_frame": 91500,
-        "end_frame": 92000,
-        "start_time": "01:01:00",
-        "end_time": "01:01:20",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "6",
-        "title": "6 Einbringung des Doppelhaushaltes 2027/2028 sowie Haushaltsstrukturkonzept 2027-2031",
-        "start_frame": 92000,
-        "end_frame": 92250,
-        "start_time": "01:01:20",
-        "end_time": "01:01:30",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "Einbringung des Doppelhaushaltes 2027/2028 sowie Haushaltsstrukturkonzept 2027-2031",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "202",
-        "title": "6 Einbringung des Doppelhaushaltes 2027/2028 sowie Haushaltsstrukturkonzept\nRedezel\n2027-2031\n5:00",
-        "start_frame": 92250,
-        "end_frame": 92500,
-        "start_time": "01:01:30",
-        "end_time": "01:01:40",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "6",
-        "title": "6 Einbringung des Doppelhaushaltes 2027/2028 sowie Haushaltsstrukturkonzept 2027-2031",
-        "start_frame": 92500,
-        "end_frame": 92750,
-        "start_time": "01:01:40",
-        "end_time": "01:01:50",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "Einbringung des Doppelhaushaltes 2027/2028 sowie Haushaltsstrukturkonzept 2027-2031",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "22",
-        "title": "22 (nichtöffentlich)",
-        "start_frame": 92750,
-        "end_frame": 93000,
-        "start_time": "01:01:50",
-        "end_time": "01:02:00",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "(nichtöffentlich)",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "202",
-        "title": "6 Einbringung des Doppelhaushaltes 2027/2028 sowie Haushaltsstrukturkonzept\nRedezel\n2027-2031\n5:00",
-        "start_frame": 93000,
-        "end_frame": 94000,
-        "start_time": "01:02:00",
-        "end_time": "01:02:40",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "22",
-        "title": "22 (nichtöffentlich)",
-        "start_frame": 94000,
-        "end_frame": 94500,
-        "start_time": "01:02:40",
-        "end_time": "01:03:00",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "(nichtöffentlich)",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "2",
-        "title": "2 Feststellung der Beschlussfähigkeit",
-        "start_frame": 94500,
-        "end_frame": 94750,
-        "start_time": "01:03:00",
-        "end_time": "01:03:10",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "Feststellung der Beschlussfähigkeit",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "202",
-        "title": "6 Einbringung des Doppelhaushaltes 2027/2028 sowie Haushaltsstrukturkonzept\nRedezel\n2027-2031\n5:00",
-        "start_frame": 94750,
-        "end_frame": 95750,
-        "start_time": "01:03:10",
-        "end_time": "01:03:50",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "22",
-        "title": "22 (nichtöffentlich)",
-        "start_frame": 95750,
-        "end_frame": 96000,
-        "start_time": "01:03:50",
-        "end_time": "01:04:00",
-        "is_voting": false,
-        "vorlage_link": "",
-        "reference_number": "",
-        "title_text": "(nichtöffentlich)",
-        "is_presentation": false,
-        "is_stream_intro": false
-      },
-      {
-        "id": "6",
-        "title": "6 Einbringung des Doppelhaushaltes 2027/2028 sowie Haushaltsstrukturkonzept 2027-2031",
-        "start_frame": 96000,
         "end_frame": 96250,
-        "start_time": "01:04:00",
+        "start_time": "01:00:30",
         "end_time": "01:04:10",
         "is_voting": false,
         "vorlage_link": "",
@@ -48633,6 +48517,104 @@
       }
     ],
     "votes": [],
+    "vote_keys": [
+      {
+        "frame": 5250,
+        "key": "2026-09-02:5250"
+      },
+      {
+        "frame": 11250,
+        "key": "2026-09-02:11250"
+      },
+      {
+        "frame": 15500,
+        "key": "2026-09-02:15500"
+      },
+      {
+        "frame": 16750,
+        "key": "2026-09-02:16750"
+      },
+      {
+        "frame": 97250,
+        "key": "2026-09-02:97250"
+      },
+      {
+        "frame": 99500,
+        "key": "2026-09-02:99500"
+      },
+      {
+        "frame": 121250,
+        "key": "2026-09-02:121250"
+      },
+      {
+        "frame": 125500,
+        "key": "2026-09-02:125500"
+      },
+      {
+        "frame": 153375,
+        "key": "2026-09-02:153375"
+      },
+      {
+        "frame": 171250,
+        "key": "2026-09-02:171250"
+      },
+      {
+        "frame": 187750,
+        "key": "2026-09-02:187750"
+      },
+      {
+        "frame": 203775,
+        "key": "2026-09-02:203775"
+      },
+      {
+        "frame": 233250,
+        "key": "2026-09-02:233250"
+      },
+      {
+        "frame": 259500,
+        "key": "2026-09-02:259500"
+      },
+      {
+        "frame": 356500,
+        "key": "2026-09-02:356500"
+      },
+      {
+        "frame": 410750,
+        "key": "2026-09-02:410750"
+      },
+      {
+        "frame": 419475,
+        "key": "2026-09-02:419475"
+      },
+      {
+        "frame": 497500,
+        "key": "2026-09-02:497500"
+      },
+      {
+        "frame": 498500,
+        "key": "2026-09-02:498500"
+      },
+      {
+        "frame": 501250,
+        "key": "2026-09-02:501250"
+      },
+      {
+        "frame": 502500,
+        "key": "2026-09-02:502500"
+      },
+      {
+        "frame": 504500,
+        "key": "2026-09-02:504500"
+      },
+      {
+        "frame": 574250,
+        "key": "2026-09-02:574250"
+      },
+      {
+        "frame": 580250,
+        "key": "2026-09-02:580250"
+      }
+    ],
     "speakers": [
       {
         "id": "gruene_nicole_schreyer_krieg",
@@ -53962,6 +53944,52 @@
       }
     ],
     "votes": [],
+    "vote_keys": [
+      {
+        "frame": 36000,
+        "key": "2026-09-03:36000"
+      },
+      {
+        "frame": 65750,
+        "key": "2026-09-03:65750"
+      },
+      {
+        "frame": 109000,
+        "key": "2026-09-03:109000"
+      },
+      {
+        "frame": 110250,
+        "key": "2026-09-03:110250"
+      },
+      {
+        "frame": 264375,
+        "key": "2026-09-03:264375"
+      },
+      {
+        "frame": 293325,
+        "key": "2026-09-03:293325"
+      },
+      {
+        "frame": 303000,
+        "key": "2026-09-03:303000"
+      },
+      {
+        "frame": 304500,
+        "key": "2026-09-03:304500"
+      },
+      {
+        "frame": 308250,
+        "key": "2026-09-03:308250"
+      },
+      {
+        "frame": 352425,
+        "key": "2026-09-03:352425"
+      },
+      {
+        "frame": 362000,
+        "key": "2026-09-03:362000"
+      }
+    ],
     "speakers": [
       {
         "id": "gruene_nicole_schreyer_krieg",
@@ -59629,7 +59657,7 @@
     el.classList.add('active');
   }
 
-  function makeItem(seconds, id, label, isVote, vorlageLink) {
+  function makeItem(seconds, id, label, isVote, vorlageLink, voteKey) {
     var timeStr = new Date(seconds * 1000).toISOString().substr(11, 8);
     var el = document.createElement('div');
     el.className = 'item' + (isVote ? ' vote' : '');
@@ -59638,12 +59666,52 @@
       (isVote ? '<span class="badge">vote</span>' : '') +
       '<span class="item-id">' + id + '</span>' +
       '<span class="item-label">' + label + '</span>' +
-      (vorlageLink ? '<a class="item-vorlage-link" href="' + vorlageLink + '" target="_blank" rel="noopener noreferrer" title="Vorlage öffnen" onclick="event.stopPropagation()">↗</a>' : '');
+      (vorlageLink ? '<a class="item-vorlage-link" href="' + vorlageLink + '" target="_blank" rel="noopener noreferrer" title="Vorlage öffnen" onclick="event.stopPropagation()">↗</a>' : '') +
+      (voteKey ? '<a class="item-vote-link" href="votes.html#/vote/' + encodeURIComponent(voteKey) + '" title="Wie hat wer abgestimmt?" onclick="event.stopPropagation()">Ergebnis ↗</a>' : '');
     el.addEventListener('click', function() { seekTo(seconds); highlight(el); });
     return el;
   }
 
-  function buildTimeline(discussions, votes) {
+  // The recorded discussion boundaries are loose (one segment's end ran 65
+  // frames past its screen, another's start fell inside it), so a vote is
+  // allowed to sit one sample step outside the entry it belongs to.
+  var VOTE_MATCH_SLACK = 250;
+
+  // Segments abut, so a vote's frame regularly equals the previous entry's end
+  // frame as well as the next one's start frame. Treating an entry as the
+  // half-open range [start, end) hands it to the segment it opens, which is the
+  // one whose screen it is.
+  function voteDistance(entry, frame) {
+    if (frame < entry.startFrame) return entry.startFrame - frame;
+    if (!entry.endFrame) return frame - entry.startFrame;
+    if (frame >= entry.endFrame) return frame - entry.endFrame + 1;
+    return 0;
+  }
+
+  function bindVoteKeys(entries, voteKeys) {
+    if (!voteKeys || !voteKeys.length) return;
+    voteKeys.forEach(function(v) {
+      var best = null, bestScore = null;
+      entries.forEach(function(e) {
+        if (e.startFrame == null || e.voteKey) return;
+        var dist = voteDistance(e, v.frame);
+        if (dist > VOTE_MATCH_SLACK) return;
+        // Nearest wins; then a voting segment over a discussion one; then the
+        // entry whose start is closest, since a vote begins where its screen does.
+        var score = [dist, e.isVote ? 0 : 1, Math.abs(v.frame - e.startFrame)];
+        if (bestScore && !(score[0] < bestScore[0] ||
+            (score[0] === bestScore[0] && score[1] < bestScore[1]) ||
+            (score[0] === bestScore[0] && score[1] === bestScore[1] && score[2] < bestScore[2]))) return;
+        best = e;
+        bestScore = score;
+      });
+      // Each vote claims at most one entry, so four votes on item "3" land on
+      // their own four segments instead of all on the first.
+      if (best) best.voteKey = v.key;
+    });
+  }
+
+  function buildTimeline(discussions, votes, voteKeys) {
     var entries = [];
 
     discussions.forEach(function(d) {
@@ -59653,10 +59721,13 @@
       entries.push({
         seconds: timeToSeconds(d.start_time),
         endSeconds: d.end_time ? timeToSeconds(d.end_time) : 0,
+        startFrame: (d.start_frame == null ? null : d.start_frame),
+        endFrame: d.end_frame || 0,
         id: id,
         label: d.is_voting ? 'Abstimmung' : (title || '—'),
         isVote: !!d.is_voting,
-        vorlageLink: (d.vorlage_link || '').trim()
+        vorlageLink: (d.vorlage_link || '').trim(),
+        voteKey: ''
       });
     });
 
@@ -59671,6 +59742,7 @@
     });
 
     entries.sort(function(a, b) { return a.seconds - b.seconds; });
+    bindVoteKeys(entries, voteKeys);
 
     var timeline = document.getElementById('timeline');
     timeline.innerHTML = '';
@@ -59678,7 +59750,7 @@
     timelineEntries = [];
     lastAutoItemEl = null;
     entries.forEach(function(e, i) {
-      var itemEl = makeItem(e.seconds, e.id, e.label, e.isVote, e.vorlageLink);
+      var itemEl = makeItem(e.seconds, e.id, e.label, e.isVote, e.vorlageLink, e.voteKey);
       timeline.appendChild(itemEl);
 
       var entryRef = { seconds: e.seconds, itemEl: itemEl, speakerListEl: null, toggleEl: null };
@@ -59803,7 +59875,7 @@
     var searchEl = document.getElementById('timeline-search');
     if (searchEl) searchEl.value = '';
 
-    buildTimeline(session.discussions, session.votes);
+    buildTimeline(session.discussions, session.votes, session.vote_keys);
 
     if (playerReady) startPlayerTick();
   }

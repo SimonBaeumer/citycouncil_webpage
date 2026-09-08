@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Abstimmungen | City Council Analyzer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f1117;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    a { color: #7c9ef8; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    #login-overlay {
+      position: fixed;
+      inset: 0;
+      background: #0f1117;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    #login-box {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 10px;
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 280px;
+    }
+
+    #login-box h2 { font-size: 1rem; color: #fff; margin-bottom: 6px; }
+
+    #login-box input {
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #3a3d4a;
+      background: #0f1117;
+      color: #e0e0e0;
+      font-size: 0.9rem;
+    }
+
+    #login-box button {
+      margin-top: 6px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: none;
+      background: #3b5bdb;
+      color: #fff;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    #login-box button:hover { background: #4c6ef5; }
+
+    #login-error {
+      display: none;
+      color: #f87171;
+      font-size: 0.8rem;
+    }
+
+    header {
+      padding: 12px 20px;
+      background: #1a1d27;
+      border-bottom: 1px solid #2a2d3a;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    header h1 { font-size: 1rem; font-weight: 600; color: #fff; white-space: nowrap; }
+
+    .header-link {
+      margin-left: auto;
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #3b5bdb;
+      background: #1e2a4a;
+      color: #7c9ef8;
+      font-size: 0.875rem;
+      white-space: nowrap;
+    }
+    .header-link:hover { background: #253660; text-decoration: none; }
+
+    main { max-width: 1180px; margin: 0 auto; padding: 20px; }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .filters input, .filters select {
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid #2a2d3a;
+      background: #1a1d27;
+      color: #e0e0e0;
+      font-size: 0.875rem;
+    }
+    .filters input:focus, .filters select:focus { outline: none; border-color: #3b5bdb; }
+    #f-query { flex: 1; min-width: 220px; }
+
+    .result-count { font-size: 0.8rem; color: #666; margin-bottom: 10px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+
+    th {
+      text-align: left;
+      padding: 8px 10px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #888;
+      border-bottom: 1px solid #2a2d3a;
+      white-space: nowrap;
+    }
+
+    td { padding: 9px 10px; border-bottom: 1px solid #1e212b; vertical-align: top; }
+
+    tbody tr { cursor: pointer; }
+    tbody tr:hover { background: #171a23; }
+
+    .col-date, .col-top, .col-ref { white-space: nowrap; color: #9aa0ad; }
+    .col-ref a { font-family: ui-monospace, monospace; font-size: 0.8rem; }
+    .col-title { color: #e0e0e0; }
+    .col-result { white-space: nowrap; }
+
+    .bar {
+      display: inline-flex;
+      width: 120px;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #2a2d3a;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    .bar span { display: block; height: 100%; }
+    .bar .b-ja { background: #4ade80; }
+    .bar .b-nein { background: #f87171; }
+    .bar .b-enth { background: #fbbf24; }
+
+    .tally-nums { font-size: 0.8rem; color: #9aa0ad; }
+    .tally-nums b { color: #e0e0e0; font-weight: 600; }
+
+    .v-ja { color: #4ade80; }
+    .v-nein { color: #f87171; }
+    .v-enth { color: #fbbf24; }
+    .v-none { color: #9ca3af; }
+    .v-absent { color: #5b6170; }
+
+    .chip {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      border: 1px solid currentColor;
+      white-space: nowrap;
+    }
+
+    .empty { padding: 40px 10px; color: #666; text-align: center; }
+
+    .back { display: inline-block; margin-bottom: 14px; font-size: 0.85rem; }
+
+    .detail-head { margin-bottom: 18px; }
+    .detail-head h2 { font-size: 1.15rem; color: #fff; margin-bottom: 6px; line-height: 1.35; }
+    .detail-meta { font-size: 0.85rem; color: #9aa0ad; display: flex; gap: 14px; flex-wrap: wrap; }
+
+    .detail-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
+    .action {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid #3b5bdb;
+      background: #1e2a4a;
+      color: #7c9ef8;
+      font-size: 0.85rem;
+    }
+    .action:hover { background: #253660; text-decoration: none; }
+
+    .summary {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .stat {
+      background: #1a1d27;
+      border: 1px solid #2a2d3a;
+      border-radius: 8px;
+      padding: 10px 14px;
+      min-width: 96px;
+    }
+    .stat .n { font-size: 1.3rem; font-weight: 600; color: #fff; }
+    .stat .l { font-size: 0.72rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .quality { font-size: 0.78rem; color: #777; margin-top: 10px; line-height: 1.6; }
+    .quality .ok { color: #4ade80; }
+    .quality .warn { color: #fbbf24; }
+
+    .group-block { margin-top: 22px; }
+    .group-head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #2a2d3a;
+      margin-bottom: 8px;
+    }
+    .group-head h3 { font-size: 0.9rem; color: #fff; }
+    .group-head .split { font-size: 0.8rem; color: #9aa0ad; }
+
+    .member-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 4px 16px;
+    }
+    .member {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 0;
+      font-size: 0.85rem;
+    }
+    .member .mname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .note { font-size: 0.8rem; color: #fbbf24; margin-top: 8px; }
+
+    @media (max-width: 640px) {
+      .col-ref, .col-date { display: none; }
+      main { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="login-overlay">
+  <div id="login-box">
+    <h2>City Council Analyzer</h2>
+    <input id="login-user" type="text" placeholder="Username" autocomplete="username" />
+    <input id="login-pass" type="password" placeholder="Password" autocomplete="current-password" />
+    <span id="login-error">Invalid username or password.</span>
+    <button onclick="doLogin()">Sign in</button>
+  </div>
+</div>
+
+<header>
+  <h1>Abstimmungen</h1>
+  <a class="header-link" href="index.html">← Aufzeichnungen</a>
+</header>
+
+<main id="view"></main>
+
+<script>
+  (function() {
+    var overlay = document.getElementById('login-overlay');
+    var passInput = document.getElementById('login-pass');
+
+    if (localStorage.getItem('cca_auth') === '1') {
+      overlay.style.display = 'none';
+    }
+
+    passInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') doLogin();
+    });
+
+    window.doLogin = function() {
+      var user = document.getElementById('login-user').value;
+      var pass = document.getElementById('login-pass').value;
+      if (user === 'gruene' && pass === 'stadtrat') {
+        localStorage.setItem('cca_auth', '1');
+        overlay.style.display = 'none';
+      } else {
+        document.getElementById('login-error').style.display = 'block';
+        passInput.value = '';
+        passInput.focus();
+      }
+    };
+  })();
+</script>
+
+<script>
+  var DATA = {"persons":{"cdu_karsten_albrecht":{"name":"Albrecht, Karsten","group":"CDU-Fraktion","unmatched":false},"cdu_stefan_artmann":{"name":"Artmann, Stefan","group":"CDU-Fraktion","unmatched":false},"cdu_falk_dossin":{"name":"Dossin, Falk","group":"CDU-Fraktion","unmatched":false},"cdu_sabine_heymann":{"name":"Dr. Heymann, Sabine","group":"CDU-Fraktion","unmatched":false},"cdu_jens_lehmann":{"name":"Lehmann, Jens","group":"CDU-Fraktion","unmatched":false},"name:Möllmer, André":{"name":"Möllmer, André","group":"CDU-Fraktion","unmatched":true},"cdu_andreas_nowak":{"name":"Nowak, Andreas","group":"CDU-Fraktion","unmatched":false},"cdu_hans_jurgen_raque":{"name":"Raqué, Hans-Jürgen","group":"CDU-Fraktion","unmatched":false},"cdu_lucas_schopphoven":{"name":"Schopphoven, Lucas","group":"CDU-Fraktion","unmatched":false},"cdu_julian_schroder":{"name":"Schröder, Julian","group":"CDU-Fraktion","unmatched":false},"cdu_andreas_schultz":{"name":"Schultz, Andreas","group":"CDU-Fraktion","unmatched":false},"cdu_marcus_mundlein":{"name":"Mündlein, Marcus","group":"CDU-Fraktion","unmatched":false},"cdu_michael_weickert":{"name":"Weickert, Michael","group":"CDU-Fraktion","unmatched":false},"cdu_getu_abraham":{"name":"Prof. Dr. Abraham, Getu","group":"CDU-Fraktion","unmatched":false},"linke_beate_ehms":{"name":"Ehms, Beate","group":"Fraktion DIE LINKE","unmatched":false},"linke_cornelia_falken":{"name":"Falken, Cornelia","group":"Fraktion DIE LINKE","unmatched":false},"linke_mandy_gehrt":{"name":"Gehrt, Mandy","group":"Fraktion DIE LINKE","unmatched":false},"linke_elisa_gerbsch":{"name":"Dr. Gerbsch, Elisa","group":"Fraktion DIE LINKE","unmatched":false},"linke_marco_gotze":{"name":"Götze, Marco","group":"Fraktion DIE LINKE","unmatched":false},"linke_volker_kulow":{"name":"Dr. Külow, Volker","group":"Fraktion DIE LINKE","unmatched":false},"linke_juliane_nagel":{"name":"Nagel, Juliane","group":"Fraktion DIE LINKE","unmatched":false},"linke_olga_naumov":{"name":"Dr. Naumov, Olga","group":"Fraktion DIE LINKE","unmatched":false},"linke_soren_pellmann":{"name":"Pellmann, Sören","group":"Fraktion DIE LINKE","unmatched":false},"linke_franziska_riekewald":{"name":"Riekewald, Franziska","group":"Fraktion DIE LINKE","unmatched":false},"linke_susanne_scheidereiter":{"name":"Scheidereiter, Susanne","group":"Fraktion DIE LINKE","unmatched":false},"linke_enrico_stange":{"name":"Stange, Enrico","group":"Fraktion DIE LINKE","unmatched":false},"afd_marius_beyer":{"name":"Beyer, Marius","group":"AfD-Fraktion","unmatched":false},"afd_udo_buetow":{"name":"Bütow, Udo","group":"AfD-Fraktion","unmatched":false},"afd_sylvia_deubel":{"name":"Deubel, Sylvia","group":"AfD-Fraktion","unmatched":false},"afd_nora_reinhardt":{"name":"Reinhardt, Nora","group":"AfD-Fraktion","unmatched":false},"afd_rocco_farkas":{"name":"Farkas, Rocco","group":"AfD-Fraktion","unmatched":false},"afd_karsten_fiedler":{"name":"Fiedler, Karsten","group":"AfD-Fraktion","unmatched":false},"afd_alexandra_hachmeister":{"name":"Hachmeister, Alexandra","group":"AfD-Fraktion","unmatched":false},"afd_tobias_keller":{"name":"Keller, Tobias","group":"AfD-Fraktion","unmatched":false},"afd_christian_kriegel":{"name":"Kriegel, Christian","group":"AfD-Fraktion","unmatched":false},"afd_joerg_kuehne":{"name":"Kühne, Jörg","group":"AfD-Fraktion","unmatched":false},"afd_christoph_neumann":{"name":"Neumann, CHristoph","group":"AfD-Fraktion","unmatched":false},"afd_roland_ulbrich":{"name":"Ulbrich, Roland","group":"AfD-Fraktion","unmatched":false},"afd_juergen_guenter_butz":{"name":"Butz, Jürgen Günter","group":"AfD-Fraktion","unmatched":false},"gruene_marvin_frommhold":{"name":"Frommhold, Marvin","group":"B'90/Die Grünen","unmatched":false},"gruene_sylvia_herbst_weckel":{"name":"Herbst-Weckel, Sylvia","group":"B'90/Die Grünen","unmatched":false},"gruene_katharina_krefft":{"name":"Krefft, Katharina","group":"B'90/Die Grünen","unmatched":false},"gruene_gesine_martens":{"name":"Dr. Märtens, Gesine","group":"B'90/Die Grünen","unmatched":false},"gruene_tobias_peter":{"name":"Dr. Peter, Tobias","group":"B'90/Die Grünen","unmatched":false},"gruene_anna_lisa_moebius":{"name":"Möbius, Anna-Lisa","group":"B'90/Die Grünen","unmatched":false},"gruene_marsha_richarz":{"name":"Richarz, Marsha","group":"B'90/Die Grünen","unmatched":false},"gruene_chantal_schneiss":{"name":"Schneiß, Chantal","group":"B'90/Die Grünen","unmatched":false},"gruene_nicole_schreyer_krieg":{"name":"Dr. Schreyer-Krieg, Nicole","group":"B'90/Die Grünen","unmatched":false},"gruene_anne_vollerthun":{"name":"Vollerthun, Anne","group":"B'90/Die Grünen","unmatched":false},"gruene_kristina_weyh":{"name":"Weyh, Kristina","group":"B'90/Die Grünen","unmatched":false},"spd_anja_feichtinger":{"name":"Feichtinger, Anja","group":"SPD-Fraktion","unmatched":false},"spd_frank_franke":{"name":"Franke, Frank","group":"SPD-Fraktion","unmatched":false},"spd_andreas_geisler":{"name":"Geisler, Andreas","group":"SPD-Fraktion","unmatched":false},"spd_pia_heine":{"name":"Heine, Pia","group":"SPD-Fraktion","unmatched":false},"spd_ute_koehler_siegel":{"name":"Köhler-Siegel, Ute","group":"SPD-Fraktion","unmatched":false},"spd_christina_maerz":{"name":"März, Christina","group":"SPD-Fraktion","unmatched":false},"spd_marius_wittwer":{"name":"Wittwer, Marius","group":"SPD-Fraktion","unmatched":false},"bsw_bernd_bahr":{"name":"Bahr, Bernd","group":"BSW-Fraktion","unmatched":false},"bsw_sascha_jecht":{"name":"Jecht, Sascha","group":"BSW-Fraktion","unmatched":false},"bsw_thomas_kachel":{"name":"Kachel, Thomas","group":"BSW-Fraktion","unmatched":false},"bsw_danilo_streller":{"name":"Streller, Danilo","group":"BSW-Fraktion","unmatched":false},"bsw_ralf_pannowitsch":{"name":"Pannowitsch, Ralf","group":"BSW-Fraktion","unmatched":false},"bsw_eric_recke":{"name":"Recke, Eric","group":"BSW-Fraktion","unmatched":false},"bsw_marco_zscherny":{"name":"Zscherny, Marco","group":"BSW-Fraktion","unmatched":false},"freie_fraktion_jan_paul_helbig":{"name":"Helbig, Jan-Paul","group":"Freie Fraktion","unmatched":false},"freie_fraktion_thomas_kumbernuss":{"name":"Kumbernuß, Thomas","group":"Freie Fraktion","unmatched":false},"freie_fraktion_sven_morlok":{"name":"Morlok, Sven","group":"Freie Fraktion","unmatched":false},"freie_fraktion_katharina_subat":{"name":"Subat, Katharina","group":"Freie Fraktion","unmatched":false},"name:Dr. Reinhold, Klaus-Peter":{"name":"Dr. Reinhold, Klaus-Peter","group":"fraktionslos","unmatched":true},"freie_waehler_stefan_rieger":{"name":"Rieger, Stefan","group":"fraktionslos","unmatched":false},"buergermeister_burkhard_jung":{"name":"Jung, Burkhard","group":"Oberbürgermeister","unmatched":false}},"groups":["AfD-Fraktion","B'90/Die Grünen","BSW-Fraktion","CDU-Fraktion","Fraktion DIE LINKE","fraktionslos","Freie Fraktion","Oberbürgermeister","SPD-Fraktion"],"sessions":{"2026-09-02":{"title":"2026-09-02","video":true},"2026-09-03":{"title":"2026-09-03","video":true}},"votes":[{"key":"2026-09-03:36000","session":"2026-09-03","agenda":"13.22","reference":"VIII-A-02848","title":"Werbung im öffentlichen Raum aus Jugendschutzgründen regulieren – Schaffung von „Schutzzonen Kindheit und Jugend“","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030040","start_sec":1440,"tally":{"ja":11,"nein":37,"enthaltung":5},"cast":53,"present":62,"checksum_ok":true,"settled_sec":4,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",4],["cdu_falk_dossin",4],["cdu_sabine_heymann",2],["cdu_jens_lehmann",4],["name:Möllmer, André",2],["cdu_andreas_nowak",4],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",4],["cdu_julian_schroder",0],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",2],["cdu_getu_abraham",0],["linke_beate_ehms",3],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",3],["linke_marco_gotze",3],["linke_volker_kulow",1],["linke_juliane_nagel",3],["linke_olga_naumov",4],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",2],["afd_udo_buetow",2],["afd_sylvia_deubel",2],["afd_nora_reinhardt",2],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",2],["afd_tobias_keller",4],["afd_christian_kriegel",2],["afd_joerg_kuehne",2],["afd_christoph_neumann",2],["afd_roland_ulbrich",2],["afd_juergen_guenter_butz",2],["gruene_marvin_frommhold",2],["gruene_sylvia_herbst_weckel",2],["gruene_katharina_krefft",2],["gruene_gesine_martens",2],["gruene_tobias_peter",2],["gruene_anna_lisa_moebius",2],["gruene_marsha_richarz",2],["gruene_chantal_schneiss",2],["gruene_nicole_schreyer_krieg",4],["gruene_anne_vollerthun",2],["gruene_kristina_weyh",2],["spd_anja_feichtinger",2],["spd_frank_franke",2],["spd_andreas_geisler",2],["spd_pia_heine",2],["spd_ute_koehler_siegel",2],["spd_christina_maerz",4],["spd_marius_wittwer",0],["bsw_bernd_bahr",0],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",2],["freie_fraktion_thomas_kumbernuss",2],["freie_fraktion_sven_morlok",2],["freie_fraktion_katharina_subat",2],["name:Dr. Reinhold, Klaus-Peter",2],["freie_waehler_stefan_rieger",3],["buergermeister_burkhard_jung",2]]},{"key":"2026-09-03:65750","session":"2026-09-03","agenda":"13.24","reference":"VIII-A-02980","title":"Bürgernahe Dienstleistungen stärken – Aufgaben- und Organisationsuntersuchung sachgerecht gestalten – ASK-Prozess vom Kopf auf die Füße stellen!","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030446","start_sec":2630,"tally":{"ja":13,"nein":32,"enthaltung":14},"cast":59,"present":62,"checksum_ok":true,"settled_sec":15,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",4],["cdu_sabine_heymann",2],["cdu_jens_lehmann",4],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",2],["cdu_julian_schroder",0],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",2],["cdu_getu_abraham",0],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",2],["afd_udo_buetow",2],["afd_sylvia_deubel",2],["afd_nora_reinhardt",2],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",2],["afd_tobias_keller",2],["afd_christian_kriegel",2],["afd_joerg_kuehne",2],["afd_christoph_neumann",2],["afd_roland_ulbrich",2],["afd_juergen_guenter_butz",2],["gruene_marvin_frommhold",3],["gruene_sylvia_herbst_weckel",3],["gruene_katharina_krefft",3],["gruene_gesine_martens",3],["gruene_tobias_peter",3],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",3],["gruene_chantal_schneiss",3],["gruene_nicole_schreyer_krieg",3],["gruene_anne_vollerthun",3],["gruene_kristina_weyh",3],["spd_anja_feichtinger",2],["spd_frank_franke",2],["spd_andreas_geisler",2],["spd_pia_heine",2],["spd_ute_koehler_siegel",2],["spd_christina_maerz",4],["spd_marius_wittwer",0],["bsw_bernd_bahr",0],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",3],["bsw_ralf_pannowitsch",3],["bsw_eric_recke",3],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",2],["freie_fraktion_thomas_kumbernuss",2],["freie_fraktion_sven_morlok",2],["freie_fraktion_katharina_subat",2],["name:Dr. Reinhold, Klaus-Peter",2],["freie_waehler_stefan_rieger",2],["buergermeister_burkhard_jung",2]]},{"key":"2026-09-03:109000","session":"2026-09-03","agenda":"13.25","reference":"VIII-A-03110","title":"Auflösung der LQEG","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030784","start_sec":4360,"tally":{"ja":23,"nein":32,"enthaltung":5},"cast":60,"present":62,"checksum_ok":true,"settled_sec":16,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",4],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",0],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",1],["cdu_michael_weickert",1],["cdu_getu_abraham",0],["linke_beate_ehms",2],["linke_cornelia_falken",2],["linke_mandy_gehrt",2],["linke_elisa_gerbsch",2],["linke_marco_gotze",2],["linke_volker_kulow",2],["linke_juliane_nagel",2],["linke_olga_naumov",2],["linke_soren_pellmann",0],["linke_franziska_riekewald",2],["linke_susanne_scheidereiter",2],["linke_enrico_stange",2],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",2],["gruene_sylvia_herbst_weckel",2],["gruene_katharina_krefft",2],["gruene_gesine_martens",2],["gruene_tobias_peter",2],["gruene_anna_lisa_moebius",2],["gruene_marsha_richarz",2],["gruene_chantal_schneiss",2],["gruene_nicole_schreyer_krieg",2],["gruene_anne_vollerthun",2],["gruene_kristina_weyh",2],["spd_anja_feichtinger",2],["spd_frank_franke",2],["spd_andreas_geisler",2],["spd_pia_heine",2],["spd_ute_koehler_siegel",2],["spd_christina_maerz",4],["spd_marius_wittwer",0],["bsw_bernd_bahr",0],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",3],["bsw_ralf_pannowitsch",3],["bsw_eric_recke",3],["bsw_marco_zscherny",3],["freie_fraktion_jan_paul_helbig",2],["freie_fraktion_thomas_kumbernuss",2],["freie_fraktion_sven_morlok",2],["freie_fraktion_katharina_subat",2],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",2]]},{"key":"2026-09-03:110250","session":"2026-09-03","agenda":"11.4","reference":"VIII-DS-03296","title":"Vertreter/-innen der Stadt Leipzig im Aufsichtsrat der Leipziger Quartiersentwicklungsgesellschaft mbH (LQEG)","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2031300","start_sec":4410,"tally":{"ja":37,"nein":23,"enthaltung":0},"cast":60,"present":62,"checksum_ok":true,"settled_sec":8,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",4],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",2],["cdu_julian_schroder",0],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",2],["cdu_getu_abraham",0],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",2],["afd_udo_buetow",2],["afd_sylvia_deubel",2],["afd_nora_reinhardt",2],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",2],["afd_tobias_keller",2],["afd_christian_kriegel",2],["afd_joerg_kuehne",2],["afd_christoph_neumann",2],["afd_roland_ulbrich",2],["afd_juergen_guenter_butz",2],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",4],["spd_marius_wittwer",0],["bsw_bernd_bahr",0],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",2],["freie_waehler_stefan_rieger",2],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-03:264375","session":"2026-09-03","agenda":"19.9","reference":"VII-DS-09678","title":"Bau- und Finanzierungsbeschluss Ausbau Georg-Schumann-Straße von Böhmestraße bis Delitzscher Straße (Chausseehaus), (Bestätigung gem. §20 SächsKomHVO)","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2015044","start_sec":10575,"tally":{"ja":39,"nein":10,"enthaltung":11},"cast":60,"present":61,"checksum_ok":true,"settled_sec":20,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",4],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",2],["cdu_julian_schroder",0],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",0],["cdu_getu_abraham",0],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",3],["afd_udo_buetow",3],["afd_sylvia_deubel",3],["afd_nora_reinhardt",3],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",3],["afd_tobias_keller",3],["afd_christian_kriegel",3],["afd_joerg_kuehne",3],["afd_christoph_neumann",3],["afd_roland_ulbrich",3],["afd_juergen_guenter_butz",3],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",0],["bsw_bernd_bahr",0],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",2],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-03:293325","session":"2026-09-03","agenda":"19.13","reference":"VIII-DS-01570","title":"1. Satzung zur Änderung der Satzung über die Erhebung einer Beherbergungssteuer in der Stadt Leipzig (Beherbergungssteuersatzung)","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2026297","start_sec":11733,"tally":{"ja":57,"nein":0,"enthaltung":2},"cast":59,"present":59,"checksum_ok":true,"settled_sec":7,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",0],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",0],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",1],["cdu_michael_weickert",0],["cdu_getu_abraham",0],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",0],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",0],["bsw_bernd_bahr",0],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",3],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-03:303000","session":"2026-09-03","agenda":"19.16.1","reference":"VIII-DS-02229-NF-01-ÄA-01","title":"Bau- und Finanzierungsbeschluss Umbau Torgauer Platz einschließlich Torgauer Straße und Eisenbahnstraße - Bestätigung gem. § 79 (1) SächsGemO sowie § 20 SächsKomHVO","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2031648","start_sec":12120,"tally":{"ja":27,"nein":23,"enthaltung":7},"cast":57,"present":59,"checksum_ok":true,"settled_sec":16,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",0],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",2],["cdu_julian_schroder",0],["cdu_andreas_schultz",4],["cdu_marcus_mundlein",2],["cdu_michael_weickert",0],["cdu_getu_abraham",0],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",4],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",2],["afd_udo_buetow",2],["afd_sylvia_deubel",2],["afd_nora_reinhardt",2],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",2],["afd_tobias_keller",2],["afd_christian_kriegel",2],["afd_joerg_kuehne",2],["afd_christoph_neumann",2],["afd_roland_ulbrich",2],["afd_juergen_guenter_butz",2],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",0],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",0],["bsw_bernd_bahr",0],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",3],["bsw_ralf_pannowitsch",3],["bsw_eric_recke",3],["bsw_marco_zscherny",3],["freie_fraktion_jan_paul_helbig",3],["freie_fraktion_thomas_kumbernuss",2],["freie_fraktion_sven_morlok",2],["freie_fraktion_katharina_subat",3],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",2],["buergermeister_burkhard_jung",2]]},{"key":"2026-09-03:304500","session":"2026-09-03","agenda":"19.16","reference":"VIII-DS-02229-NF-01","title":"Bau- und Finanzierungsbeschluss Umbau Torgauer Platz einschließlich Torgauer Straße und Eisenbahnstraße - Bestätigung gem. § 79 (1) SächsGemO sowie § 20 SächsKomHVO","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2031376","start_sec":12180,"tally":{"ja":52,"nein":0,"enthaltung":4},"cast":56,"present":59,"checksum_ok":true,"settled_sec":5,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",3],["cdu_sabine_heymann",1],["cdu_jens_lehmann",0],["name:Möllmer, André",3],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",3],["cdu_julian_schroder",0],["cdu_andreas_schultz",4],["cdu_marcus_mundlein",1],["cdu_michael_weickert",0],["cdu_getu_abraham",0],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",4],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",0],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",0],["bsw_bernd_bahr",0],["bsw_sascha_jecht",0],["bsw_thomas_kachel",4],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",3],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-03:308250","session":"2026-09-03","agenda":"19.20","reference":"VIII-DS-02865","title":"Bebauungsplan Nr. 355 „Dieskaustraße / Seumestraße-Nutzungsarten“ 1. Änderung; Stadtbezirk:  Leipzig-Südwest, Ortsteil:  Knautkleeberg-Knauthain; Satzungsbeschluss","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030089","start_sec":12330,"tally":{"ja":43,"nein":8,"enthaltung":2},"cast":53,"present":59,"checksum_ok":true,"settled_sec":7,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",0],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",4],["cdu_julian_schroder",0],["cdu_andreas_schultz",4],["cdu_marcus_mundlein",1],["cdu_michael_weickert",0],["cdu_getu_abraham",0],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",3],["linke_marco_gotze",1],["linke_volker_kulow",4],["linke_juliane_nagel",4],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",0],["gruene_marsha_richarz",2],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",2],["gruene_anne_vollerthun",2],["gruene_kristina_weyh",1],["spd_anja_feichtinger",2],["spd_frank_franke",2],["spd_andreas_geisler",2],["spd_pia_heine",2],["spd_ute_koehler_siegel",4],["spd_christina_maerz",2],["spd_marius_wittwer",0],["bsw_bernd_bahr",0],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",4],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",3],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-03:352425","session":"2026-09-03","agenda":"19.22","reference":"VIII-DS-02925","title":"Flächennutzungsplan-Änderung für den Bereich „Radefelder Allee West“; Stadtbezirk:  Nordwest, Ortsteil:  Lützschena-Stahmeln; Feststellungsbeschluss","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030265","start_sec":14097,"tally":{"ja":40,"nein":0,"enthaltung":11},"cast":51,"present":55,"checksum_ok":true,"settled_sec":16,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",4],["cdu_jens_lehmann",0],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",0],["cdu_andreas_schultz",0],["cdu_marcus_mundlein",1],["cdu_michael_weickert",0],["cdu_getu_abraham",0],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",0],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",4],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",3],["gruene_sylvia_herbst_weckel",3],["gruene_katharina_krefft",3],["gruene_gesine_martens",3],["gruene_tobias_peter",0],["gruene_anna_lisa_moebius",0],["gruene_marsha_richarz",3],["gruene_chantal_schneiss",3],["gruene_nicole_schreyer_krieg",3],["gruene_anne_vollerthun",3],["gruene_kristina_weyh",3],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",0],["bsw_bernd_bahr",0],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",0],["bsw_eric_recke",1],["bsw_marco_zscherny",3],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",4],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",4],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-03:362000","session":"2026-09-03","agenda":"20.1.1","reference":"VIII-Ifo-02076-ÄA-01","title":"Feedbackmanagement der Ausländerbehörde","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2031711","start_sec":14480,"tally":{"ja":23,"nein":26,"enthaltung":0},"cast":49,"present":54,"checksum_ok":true,"settled_sec":20,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",0],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",0],["cdu_andreas_schultz",0],["cdu_marcus_mundlein",1],["cdu_michael_weickert",0],["cdu_getu_abraham",0],["linke_beate_ehms",2],["linke_cornelia_falken",2],["linke_mandy_gehrt",2],["linke_elisa_gerbsch",2],["linke_marco_gotze",2],["linke_volker_kulow",2],["linke_juliane_nagel",0],["linke_olga_naumov",4],["linke_soren_pellmann",0],["linke_franziska_riekewald",4],["linke_susanne_scheidereiter",2],["linke_enrico_stange",2],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",2],["gruene_sylvia_herbst_weckel",2],["gruene_katharina_krefft",2],["gruene_gesine_martens",2],["gruene_tobias_peter",0],["gruene_anna_lisa_moebius",0],["gruene_marsha_richarz",2],["gruene_chantal_schneiss",2],["gruene_nicole_schreyer_krieg",2],["gruene_anne_vollerthun",2],["gruene_kristina_weyh",2],["spd_anja_feichtinger",2],["spd_frank_franke",2],["spd_andreas_geisler",2],["spd_pia_heine",2],["spd_ute_koehler_siegel",2],["spd_christina_maerz",2],["spd_marius_wittwer",0],["bsw_bernd_bahr",0],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",0],["bsw_eric_recke",1],["bsw_marco_zscherny",4],["freie_fraktion_jan_paul_helbig",4],["freie_fraktion_thomas_kumbernuss",2],["freie_fraktion_sven_morlok",2],["freie_fraktion_katharina_subat",0],["name:Dr. Reinhold, Klaus-Peter",4],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",2]]},{"key":"2026-09-02:5250","session":"2026-09-02","agenda":"3","reference":"","title":"Feststellung der Tagesordnung","vorlage":"","start_sec":210,"tally":{"ja":41,"nein":21,"enthaltung":0},"cast":62,"present":66,"checksum_ok":true,"settled_sec":20,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",4],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",1],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",4],["cdu_michael_weickert",1],["cdu_getu_abraham",1],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",4],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",2],["gruene_sylvia_herbst_weckel",2],["gruene_katharina_krefft",2],["gruene_gesine_martens",2],["gruene_tobias_peter",2],["gruene_anna_lisa_moebius",2],["gruene_marsha_richarz",2],["gruene_chantal_schneiss",2],["gruene_nicole_schreyer_krieg",2],["gruene_anne_vollerthun",2],["gruene_kristina_weyh",2],["spd_anja_feichtinger",2],["spd_frank_franke",4],["spd_andreas_geisler",2],["spd_pia_heine",2],["spd_ute_koehler_siegel",2],["spd_christina_maerz",2],["spd_marius_wittwer",2],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",2],["freie_fraktion_thomas_kumbernuss",2],["freie_fraktion_sven_morlok",2],["freie_fraktion_katharina_subat",2],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:11250","session":"2026-09-02","agenda":"3","reference":"","title":"Feststellung der Tagesordnung","vorlage":"","start_sec":450,"tally":{"ja":12,"nein":46,"enthaltung":6},"cast":64,"present":66,"checksum_ok":true,"settled_sec":4,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",1],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",4],["cdu_michael_weickert",1],["cdu_getu_abraham",1],["linke_beate_ehms",2],["linke_cornelia_falken",2],["linke_mandy_gehrt",2],["linke_elisa_gerbsch",2],["linke_marco_gotze",3],["linke_volker_kulow",2],["linke_juliane_nagel",2],["linke_olga_naumov",2],["linke_soren_pellmann",0],["linke_franziska_riekewald",2],["linke_susanne_scheidereiter",2],["linke_enrico_stange",2],["afd_marius_beyer",2],["afd_udo_buetow",2],["afd_sylvia_deubel",2],["afd_nora_reinhardt",2],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",2],["afd_tobias_keller",2],["afd_christian_kriegel",2],["afd_joerg_kuehne",2],["afd_christoph_neumann",2],["afd_roland_ulbrich",2],["afd_juergen_guenter_butz",2],["gruene_marvin_frommhold",2],["gruene_sylvia_herbst_weckel",2],["gruene_katharina_krefft",2],["gruene_gesine_martens",2],["gruene_tobias_peter",2],["gruene_anna_lisa_moebius",2],["gruene_marsha_richarz",2],["gruene_chantal_schneiss",2],["gruene_nicole_schreyer_krieg",2],["gruene_anne_vollerthun",2],["gruene_kristina_weyh",2],["spd_anja_feichtinger",2],["spd_frank_franke",4],["spd_andreas_geisler",2],["spd_pia_heine",2],["spd_ute_koehler_siegel",2],["spd_christina_maerz",2],["spd_marius_wittwer",2],["bsw_bernd_bahr",2],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",3],["bsw_ralf_pannowitsch",3],["bsw_eric_recke",3],["bsw_marco_zscherny",2],["freie_fraktion_jan_paul_helbig",2],["freie_fraktion_thomas_kumbernuss",2],["freie_fraktion_sven_morlok",2],["freie_fraktion_katharina_subat",2],["name:Dr. Reinhold, Klaus-Peter",2],["freie_waehler_stefan_rieger",3],["buergermeister_burkhard_jung",2]]},{"key":"2026-09-02:15500","session":"2026-09-02","agenda":"3","reference":"","title":"Feststellung der Tagesordnung","vorlage":"","start_sec":620,"tally":{"ja":31,"nein":32,"enthaltung":1},"cast":64,"present":66,"checksum_ok":true,"settled_sec":11,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",1],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",4],["cdu_michael_weickert",1],["cdu_getu_abraham",1],["linke_beate_ehms",2],["linke_cornelia_falken",2],["linke_mandy_gehrt",2],["linke_elisa_gerbsch",2],["linke_marco_gotze",2],["linke_volker_kulow",2],["linke_juliane_nagel",3],["linke_olga_naumov",2],["linke_soren_pellmann",0],["linke_franziska_riekewald",2],["linke_susanne_scheidereiter",2],["linke_enrico_stange",2],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",2],["gruene_sylvia_herbst_weckel",2],["gruene_katharina_krefft",2],["gruene_gesine_martens",2],["gruene_tobias_peter",2],["gruene_anna_lisa_moebius",2],["gruene_marsha_richarz",2],["gruene_chantal_schneiss",2],["gruene_nicole_schreyer_krieg",2],["gruene_anne_vollerthun",2],["gruene_kristina_weyh",2],["spd_anja_feichtinger",2],["spd_frank_franke",4],["spd_andreas_geisler",2],["spd_pia_heine",2],["spd_ute_koehler_siegel",2],["spd_christina_maerz",2],["spd_marius_wittwer",2],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",2],["freie_fraktion_thomas_kumbernuss",2],["freie_fraktion_sven_morlok",2],["freie_fraktion_katharina_subat",2],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",2]]},{"key":"2026-09-02:16750","session":"2026-09-02","agenda":"3","reference":"","title":"Feststellung der Tagesordnung","vorlage":"","start_sec":670,"tally":{"ja":39,"nein":16,"enthaltung":8},"cast":63,"present":66,"checksum_ok":true,"settled_sec":6,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",4],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",1],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",4],["cdu_michael_weickert",1],["cdu_getu_abraham",1],["linke_beate_ehms",2],["linke_cornelia_falken",2],["linke_mandy_gehrt",3],["linke_elisa_gerbsch",3],["linke_marco_gotze",3],["linke_volker_kulow",3],["linke_juliane_nagel",3],["linke_olga_naumov",3],["linke_soren_pellmann",0],["linke_franziska_riekewald",3],["linke_susanne_scheidereiter",3],["linke_enrico_stange",2],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",2],["gruene_sylvia_herbst_weckel",2],["gruene_katharina_krefft",2],["gruene_gesine_martens",2],["gruene_tobias_peter",2],["gruene_anna_lisa_moebius",2],["gruene_marsha_richarz",2],["gruene_chantal_schneiss",2],["gruene_nicole_schreyer_krieg",2],["gruene_anne_vollerthun",2],["gruene_kristina_weyh",2],["spd_anja_feichtinger",1],["spd_frank_franke",4],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",2],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",2],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:97250","session":"2026-09-02","agenda":"9.4","reference":"VIII-DS-00057-NF-01-DS-05","title":"Stadtbezirksbeirat Südwest - Bestellung der Mitglieder (5. Änderung)","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2031224","start_sec":3890,"tally":{"ja":31,"nein":29,"enthaltung":0},"cast":60,"present":66,"checksum_ok":true,"settled_sec":14,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",4],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",4],["cdu_julian_schroder",1],["cdu_andreas_schultz",4],["cdu_marcus_mundlein",4],["cdu_michael_weickert",1],["cdu_getu_abraham",1],["linke_beate_ehms",2],["linke_cornelia_falken",2],["linke_mandy_gehrt",2],["linke_elisa_gerbsch",2],["linke_marco_gotze",2],["linke_volker_kulow",2],["linke_juliane_nagel",2],["linke_olga_naumov",4],["linke_soren_pellmann",0],["linke_franziska_riekewald",2],["linke_susanne_scheidereiter",2],["linke_enrico_stange",2],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",2],["gruene_sylvia_herbst_weckel",2],["gruene_katharina_krefft",2],["gruene_gesine_martens",2],["gruene_tobias_peter",2],["gruene_anna_lisa_moebius",2],["gruene_marsha_richarz",2],["gruene_chantal_schneiss",2],["gruene_nicole_schreyer_krieg",2],["gruene_anne_vollerthun",2],["gruene_kristina_weyh",2],["spd_anja_feichtinger",2],["spd_frank_franke",2],["spd_andreas_geisler",2],["spd_pia_heine",2],["spd_ute_koehler_siegel",2],["spd_christina_maerz",2],["spd_marius_wittwer",2],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",2],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",4],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:99500","session":"2026-09-02","agenda":"9.7","reference":"VIII-DS-00259-DS-10","title":"Beirat für Gleichstellung (10. Änderung)","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2031311","start_sec":3980,"tally":{"ja":59,"nein":0,"enthaltung":0},"cast":59,"present":66,"checksum_ok":true,"settled_sec":8,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",4],["cdu_julian_schroder",1],["cdu_andreas_schultz",4],["cdu_marcus_mundlein",4],["cdu_michael_weickert",1],["cdu_getu_abraham",1],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",4],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",4],["linke_soren_pellmann",0],["linke_franziska_riekewald",4],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",4],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:121250","session":"2026-09-02","agenda":"13.3.1","reference":"VIII-A-02816-VSP-01","title":"Aktionsfonds Eisenbahnstraße Mittelfreigabe","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030409","start_sec":4850,"tally":{"ja":39,"nein":12,"enthaltung":9},"cast":60,"present":66,"checksum_ok":true,"settled_sec":20,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",2],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",2],["cdu_julian_schroder",2],["cdu_andreas_schultz",4],["cdu_marcus_mundlein",2],["cdu_michael_weickert",2],["cdu_getu_abraham",2],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",4],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",3],["afd_udo_buetow",3],["afd_sylvia_deubel",3],["afd_nora_reinhardt",4],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",3],["afd_tobias_keller",3],["afd_christian_kriegel",3],["afd_joerg_kuehne",3],["afd_christoph_neumann",4],["afd_roland_ulbrich",3],["afd_juergen_guenter_butz",4],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",4],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",3],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:125500","session":"2026-09-02","agenda":"13.1","reference":"VIII-A-01808","title":"Haltestellensicherung Ostheimstraße","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2026984","start_sec":5020,"tally":{"ja":48,"nein":11,"enthaltung":5},"cast":64,"present":66,"checksum_ok":true,"settled_sec":20,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",1],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",1],["cdu_michael_weickert",1],["cdu_getu_abraham",1],["linke_beate_ehms",2],["linke_cornelia_falken",2],["linke_mandy_gehrt",2],["linke_elisa_gerbsch",2],["linke_marco_gotze",2],["linke_volker_kulow",2],["linke_juliane_nagel",2],["linke_olga_naumov",4],["linke_soren_pellmann",0],["linke_franziska_riekewald",2],["linke_susanne_scheidereiter",2],["linke_enrico_stange",2],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",4],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",3],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",3],["bsw_ralf_pannowitsch",3],["bsw_eric_recke",2],["bsw_marco_zscherny",3],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:153375","session":"2026-09-02","agenda":"13.4","reference":"VII-A-08074-NF-01","title":"Verlegung der Gedenkanlage für die Opfer der Gewaltherrschaft an einen prominenteren Standort innerhalb des Südfriedhofes","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2031662","start_sec":6135,"tally":{"ja":51,"nein":1,"enthaltung":12},"cast":64,"present":66,"checksum_ok":true,"settled_sec":13,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",1],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",1],["cdu_michael_weickert",1],["cdu_getu_abraham",1],["linke_beate_ehms",3],["linke_cornelia_falken",3],["linke_mandy_gehrt",3],["linke_elisa_gerbsch",3],["linke_marco_gotze",3],["linke_volker_kulow",3],["linke_juliane_nagel",3],["linke_olga_naumov",4],["linke_soren_pellmann",0],["linke_franziska_riekewald",3],["linke_susanne_scheidereiter",3],["linke_enrico_stange",3],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",3],["bsw_marco_zscherny",2],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",4],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:171250","session":"2026-09-02","agenda":"13.5","reference":"VIII-A-01891-NF-02","title":"Erhalt des stadtbildprägenden Silberahorns am Wilhelm-Leuschner-Platz durch Anpassung der Baukörper","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030986","start_sec":6850,"tally":{"ja":28,"nein":34,"enthaltung":2},"cast":64,"present":66,"checksum_ok":true,"settled_sec":15,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",2],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",2],["cdu_julian_schroder",2],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",2],["cdu_getu_abraham",2],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",4],["linke_juliane_nagel",1],["linke_olga_naumov",4],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",2],["afd_udo_buetow",2],["afd_sylvia_deubel",2],["afd_nora_reinhardt",2],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",2],["afd_tobias_keller",2],["afd_christian_kriegel",2],["afd_joerg_kuehne",2],["afd_christoph_neumann",2],["afd_roland_ulbrich",2],["afd_juergen_guenter_butz",2],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",2],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",2],["bsw_ralf_pannowitsch",2],["bsw_eric_recke",2],["bsw_marco_zscherny",3],["freie_fraktion_jan_paul_helbig",2],["freie_fraktion_thomas_kumbernuss",2],["freie_fraktion_sven_morlok",2],["freie_fraktion_katharina_subat",2],["name:Dr. Reinhold, Klaus-Peter",2],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",2]]},{"key":"2026-09-02:187750","session":"2026-09-02","agenda":"13.12.1","reference":"VIII-A-02610-VSP-01","title":"Anpassung der Milieuschutzsatzung zur Nutzbarmachung von Wohnungen","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2029536","start_sec":7510,"tally":{"ja":64,"nein":0,"enthaltung":1},"cast":65,"present":66,"checksum_ok":true,"settled_sec":10,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",1],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",1],["cdu_michael_weickert",1],["cdu_getu_abraham",3],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",4],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:203775","session":"2026-09-02","agenda":"13.15","reference":"VIII-A-02754-NF-01","title":"Erweiterung des Prüfkatalogs für Vorlagen","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030639","start_sec":8151,"tally":{"ja":19,"nein":32,"enthaltung":12},"cast":63,"present":66,"checksum_ok":true,"settled_sec":17,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",4],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",1],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",1],["cdu_michael_weickert",1],["cdu_getu_abraham",1],["linke_beate_ehms",2],["linke_cornelia_falken",2],["linke_mandy_gehrt",2],["linke_elisa_gerbsch",2],["linke_marco_gotze",2],["linke_volker_kulow",2],["linke_juliane_nagel",2],["linke_olga_naumov",4],["linke_soren_pellmann",0],["linke_franziska_riekewald",2],["linke_susanne_scheidereiter",2],["linke_enrico_stange",2],["afd_marius_beyer",3],["afd_udo_buetow",1],["afd_sylvia_deubel",3],["afd_nora_reinhardt",3],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",3],["afd_tobias_keller",3],["afd_christian_kriegel",3],["afd_joerg_kuehne",3],["afd_christoph_neumann",3],["afd_roland_ulbrich",3],["afd_juergen_guenter_butz",3],["gruene_marvin_frommhold",2],["gruene_sylvia_herbst_weckel",2],["gruene_katharina_krefft",2],["gruene_gesine_martens",2],["gruene_tobias_peter",2],["gruene_anna_lisa_moebius",2],["gruene_marsha_richarz",2],["gruene_chantal_schneiss",2],["gruene_nicole_schreyer_krieg",2],["gruene_anne_vollerthun",2],["gruene_kristina_weyh",2],["spd_anja_feichtinger",2],["spd_frank_franke",2],["spd_andreas_geisler",1],["spd_pia_heine",2],["spd_ute_koehler_siegel",2],["spd_christina_maerz",2],["spd_marius_wittwer",2],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",3],["freie_fraktion_jan_paul_helbig",2],["freie_fraktion_thomas_kumbernuss",2],["freie_fraktion_sven_morlok",2],["freie_fraktion_katharina_subat",2],["name:Dr. Reinhold, Klaus-Peter",2],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",4]]},{"key":"2026-09-02:233250","session":"2026-09-02","agenda":"13.17.1","reference":"VIII-A-02834-VSP-01","title":"Antrag Demokratie fördern statt behindern – Bundesförderprogramm „Demokratie leben!“ muss gelebt werden","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030245","start_sec":9330,"tally":{"ja":33,"nein":32,"enthaltung":0},"cast":65,"present":66,"checksum_ok":true,"settled_sec":13,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",2],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",2],["cdu_julian_schroder",2],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",2],["cdu_getu_abraham",2],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",4],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",2],["afd_udo_buetow",2],["afd_sylvia_deubel",2],["afd_nora_reinhardt",2],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",2],["afd_tobias_keller",2],["afd_christian_kriegel",2],["afd_joerg_kuehne",2],["afd_christoph_neumann",2],["afd_roland_ulbrich",2],["afd_juergen_guenter_butz",2],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",2],["bsw_sascha_jecht",0],["bsw_thomas_kachel",2],["bsw_danilo_streller",2],["bsw_ralf_pannowitsch",2],["bsw_eric_recke",2],["bsw_marco_zscherny",2],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",2],["freie_waehler_stefan_rieger",2],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:259500","session":"2026-09-02","agenda":"13.18.3","reference":"VIII-A-02838-VSP-01","title":"It's a match:  LWB-Wohnungstausch in die Tat umsetzen","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030347","start_sec":10380,"tally":{"ja":22,"nein":41,"enthaltung":2},"cast":65,"present":66,"checksum_ok":true,"settled_sec":9,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",1],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",1],["cdu_michael_weickert",1],["cdu_getu_abraham",1],["linke_beate_ehms",2],["linke_cornelia_falken",2],["linke_mandy_gehrt",2],["linke_elisa_gerbsch",2],["linke_marco_gotze",2],["linke_volker_kulow",2],["linke_juliane_nagel",2],["linke_olga_naumov",4],["linke_soren_pellmann",0],["linke_franziska_riekewald",2],["linke_susanne_scheidereiter",2],["linke_enrico_stange",2],["afd_marius_beyer",2],["afd_udo_buetow",2],["afd_sylvia_deubel",2],["afd_nora_reinhardt",2],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",2],["afd_tobias_keller",2],["afd_christian_kriegel",2],["afd_joerg_kuehne",2],["afd_christoph_neumann",2],["afd_roland_ulbrich",2],["afd_juergen_guenter_butz",2],["gruene_marvin_frommhold",2],["gruene_sylvia_herbst_weckel",2],["gruene_katharina_krefft",2],["gruene_gesine_martens",2],["gruene_tobias_peter",2],["gruene_anna_lisa_moebius",2],["gruene_marsha_richarz",2],["gruene_chantal_schneiss",2],["gruene_nicole_schreyer_krieg",2],["gruene_anne_vollerthun",2],["gruene_kristina_weyh",2],["spd_anja_feichtinger",2],["spd_frank_franke",2],["spd_andreas_geisler",2],["spd_pia_heine",2],["spd_ute_koehler_siegel",2],["spd_christina_maerz",2],["spd_marius_wittwer",2],["bsw_bernd_bahr",3],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",2],["freie_waehler_stefan_rieger",2],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:356500","session":"2026-09-02","agenda":"15.1.2","reference":"VII-P-08574-VSP-03","title":"Wiederaufnahme der regulären Müll- und Abfallentsorgung im Walter-Günther-Weg","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2028739","start_sec":14260,"tally":{"ja":44,"nein":0,"enthaltung":14},"cast":58,"present":66,"checksum_ok":true,"settled_sec":6,"rows":[["cdu_karsten_albrecht",3],["cdu_stefan_artmann",1],["cdu_falk_dossin",4],["cdu_sabine_heymann",1],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",1],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",1],["cdu_michael_weickert",1],["cdu_getu_abraham",1],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",4],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",4],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",3],["gruene_sylvia_herbst_weckel",3],["gruene_katharina_krefft",3],["gruene_gesine_martens",4],["gruene_tobias_peter",3],["gruene_anna_lisa_moebius",3],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",3],["gruene_nicole_schreyer_krieg",3],["gruene_anne_vollerthun",3],["gruene_kristina_weyh",4],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",3],["bsw_sascha_jecht",0],["bsw_thomas_kachel",4],["bsw_danilo_streller",3],["bsw_ralf_pannowitsch",3],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",4],["freie_fraktion_thomas_kumbernuss",3],["freie_fraktion_sven_morlok",4],["freie_fraktion_katharina_subat",3],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:410750","session":"2026-09-02","agenda":"15.2","reference":"VIII-P-02586-DS-01","title":"Schiffspatenschaft wiederbeleben! Appell an die Stadt Leipzig zur aktiven Unterstützung ziviler Seenotrettung","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030569","start_sec":16430,"tally":{"ja":35,"nein":29,"enthaltung":1},"cast":65,"present":66,"checksum_ok":true,"settled_sec":7,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",2],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",2],["cdu_julian_schroder",2],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",2],["cdu_getu_abraham",4],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",2],["afd_udo_buetow",2],["afd_sylvia_deubel",2],["afd_nora_reinhardt",2],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",2],["afd_tobias_keller",2],["afd_christian_kriegel",2],["afd_joerg_kuehne",2],["afd_christoph_neumann",2],["afd_roland_ulbrich",2],["afd_juergen_guenter_butz",2],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",2],["bsw_ralf_pannowitsch",2],["bsw_eric_recke",2],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",2],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",2],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",2],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:419475","session":"2026-09-02","agenda":"15.4","reference":"VIII-P-02779-DS-01","title":"Unterstützung der Leipziger Tafel durch die Stadt Leipzig","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030698","start_sec":16779,"tally":{"ja":45,"nein":11,"enthaltung":1},"cast":57,"present":66,"checksum_ok":true,"settled_sec":7,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",2],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",4],["cdu_julian_schroder",2],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",2],["cdu_getu_abraham",4],["linke_beate_ehms",4],["linke_cornelia_falken",1],["linke_mandy_gehrt",4],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",4],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",4],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",4],["gruene_kristina_weyh",4],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",4],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",3],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:497500","session":"2026-09-02","agenda":"19.2","reference":"VII-DS-07720-DS-06","title":"Teilnahme der Stadt Leipzig am Förderprojekt \"GLOW-Up\":  Gemeinschaftliche Lösungen zur Optimierung der Wärmeplanung für Umsetzungsprojekte - eilbedürftig","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2028343","start_sec":19900,"tally":{"ja":38,"nein":24,"enthaltung":2},"cast":64,"present":66,"checksum_ok":true,"settled_sec":14,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",2],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",2],["cdu_julian_schroder",2],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",2],["cdu_getu_abraham",2],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",2],["afd_udo_buetow",2],["afd_sylvia_deubel",2],["afd_nora_reinhardt",2],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",2],["afd_tobias_keller",2],["afd_christian_kriegel",2],["afd_joerg_kuehne",2],["afd_christoph_neumann",2],["afd_roland_ulbrich",2],["afd_juergen_guenter_butz",2],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",4],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",4],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",3],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",3],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:498500","session":"2026-09-02","agenda":"19.3","reference":"VII-DS-07720-DS-07","title":"Teilnahme der Stadt Leipzig am Förderprojekt \"PruefKonkret\":  Konkretisierungslücken in Prüfgebieten – Akteurszentrierte Lösungen für eine zukunftsfähige Wärmewende - eilbedürftig","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2027849","start_sec":19940,"tally":{"ja":39,"nein":24,"enthaltung":1},"cast":64,"present":66,"checksum_ok":true,"settled_sec":9,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",2],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",2],["cdu_julian_schroder",2],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",2],["cdu_getu_abraham",4],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",2],["afd_udo_buetow",2],["afd_sylvia_deubel",2],["afd_nora_reinhardt",2],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",2],["afd_tobias_keller",2],["afd_christian_kriegel",2],["afd_joerg_kuehne",2],["afd_christoph_neumann",2],["afd_roland_ulbrich",2],["afd_juergen_guenter_butz",2],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",4],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",3],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",2],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:501250","session":"2026-09-02","agenda":"19.11","reference":"VIII-DS-01156","title":"Betriebssatzung für den Städtischen Eigenbetrieb Oper Leipzig","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2025028","start_sec":20050,"tally":{"ja":64,"nein":0,"enthaltung":0},"cast":64,"present":66,"checksum_ok":true,"settled_sec":7,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",1],["cdu_julian_schroder",1],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",1],["cdu_michael_weickert",4],["cdu_getu_abraham",1],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",4],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:502500","session":"2026-09-02","agenda":"19.17","reference":"VIII-DS-02604","title":"Mitgliedschaft im europäischen Netzwerk POLIS und Ausrichtung der POLIS Konferenz 2028","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2029342","start_sec":20100,"tally":{"ja":35,"nein":30,"enthaltung":0},"cast":65,"present":66,"checksum_ok":true,"settled_sec":7,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",2],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",2],["cdu_julian_schroder",2],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",4],["cdu_getu_abraham",2],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",2],["afd_udo_buetow",2],["afd_sylvia_deubel",2],["afd_nora_reinhardt",2],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",2],["afd_tobias_keller",2],["afd_christian_kriegel",2],["afd_joerg_kuehne",2],["afd_christoph_neumann",2],["afd_roland_ulbrich",2],["afd_juergen_guenter_butz",2],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",2],["bsw_sascha_jecht",0],["bsw_thomas_kachel",2],["bsw_danilo_streller",2],["bsw_ralf_pannowitsch",2],["bsw_eric_recke",2],["bsw_marco_zscherny",2],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",1],["freie_waehler_stefan_rieger",2],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:504500","session":"2026-09-02","agenda":"19.19","reference":"VIII-DS-02822","title":"Weiterführung der Finanzierung von PlusBus-Linien im Stadtgebiet Leipzig","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2029955","start_sec":20180,"tally":{"ja":63,"nein":0,"enthaltung":0},"cast":63,"present":66,"checksum_ok":true,"settled_sec":5,"rows":[["cdu_karsten_albrecht",1],["cdu_stefan_artmann",1],["cdu_falk_dossin",1],["cdu_sabine_heymann",1],["cdu_jens_lehmann",1],["name:Möllmer, André",1],["cdu_andreas_nowak",1],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",4],["cdu_julian_schroder",1],["cdu_andreas_schultz",1],["cdu_marcus_mundlein",1],["cdu_michael_weickert",4],["cdu_getu_abraham",1],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",4],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:574250","session":"2026-09-02","agenda":"19.1","reference":"VIII-DS-03149","title":"Überplanmäßige Aufwendungen 2026 nach § 79 (1) SächsGemO in der Grundversorgung und Hilfen nach SGB XII, Grundversorgung für Arbeitssuchende nach SGB II, Eingliederungshilfe nach SGB IX, Bildungs- und Teilhabeleistungen für Empfänger WOGG bzw. BKGG sowie Sozialumlage an den KSV - eilbedürftig","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2030894","start_sec":22970,"tally":{"ja":40,"nein":12,"enthaltung":11},"cast":63,"present":66,"checksum_ok":true,"settled_sec":16,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",2],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",2],["cdu_julian_schroder",2],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",2],["cdu_getu_abraham",1],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",4],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",3],["afd_udo_buetow",3],["afd_sylvia_deubel",3],["afd_nora_reinhardt",3],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",3],["afd_tobias_keller",3],["afd_christian_kriegel",3],["afd_joerg_kuehne",3],["afd_christoph_neumann",3],["afd_roland_ulbrich",3],["afd_juergen_guenter_butz",3],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",1],["bsw_sascha_jecht",0],["bsw_thomas_kachel",1],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",1],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",4],["freie_waehler_stefan_rieger",4],["buergermeister_burkhard_jung",1]]},{"key":"2026-09-02:580250","session":"2026-09-02","agenda":"19.5","reference":"VIII-DS-02876-NF-01","title":"Bebauungsplan Nr. 451.1 \"Semmelweisstraße/An den Tierkliniken, Teilbereich Nord\"; \nStadtbezirk:  Mitte, Ortsteil:  Zentrum-Südost;\nSatzungsbeschluss","vorlage":"https://ratsinformation.leipzig.de/allris_leipzig_public/vo020?VOLFDNR=2031722","start_sec":23210,"tally":{"ja":49,"nein":11,"enthaltung":3},"cast":63,"present":66,"checksum_ok":true,"settled_sec":8,"rows":[["cdu_karsten_albrecht",2],["cdu_stefan_artmann",2],["cdu_falk_dossin",2],["cdu_sabine_heymann",2],["cdu_jens_lehmann",4],["name:Möllmer, André",2],["cdu_andreas_nowak",2],["cdu_hans_jurgen_raque",0],["cdu_lucas_schopphoven",4],["cdu_julian_schroder",2],["cdu_andreas_schultz",2],["cdu_marcus_mundlein",2],["cdu_michael_weickert",2],["cdu_getu_abraham",2],["linke_beate_ehms",1],["linke_cornelia_falken",1],["linke_mandy_gehrt",1],["linke_elisa_gerbsch",1],["linke_marco_gotze",1],["linke_volker_kulow",1],["linke_juliane_nagel",1],["linke_olga_naumov",1],["linke_soren_pellmann",0],["linke_franziska_riekewald",1],["linke_susanne_scheidereiter",1],["linke_enrico_stange",1],["afd_marius_beyer",1],["afd_udo_buetow",1],["afd_sylvia_deubel",1],["afd_nora_reinhardt",1],["afd_rocco_farkas",0],["afd_karsten_fiedler",0],["afd_alexandra_hachmeister",1],["afd_tobias_keller",1],["afd_christian_kriegel",1],["afd_joerg_kuehne",1],["afd_christoph_neumann",1],["afd_roland_ulbrich",1],["afd_juergen_guenter_butz",1],["gruene_marvin_frommhold",1],["gruene_sylvia_herbst_weckel",1],["gruene_katharina_krefft",1],["gruene_gesine_martens",1],["gruene_tobias_peter",1],["gruene_anna_lisa_moebius",1],["gruene_marsha_richarz",1],["gruene_chantal_schneiss",1],["gruene_nicole_schreyer_krieg",1],["gruene_anne_vollerthun",1],["gruene_kristina_weyh",1],["spd_anja_feichtinger",1],["spd_frank_franke",1],["spd_andreas_geisler",1],["spd_pia_heine",1],["spd_ute_koehler_siegel",1],["spd_christina_maerz",1],["spd_marius_wittwer",1],["bsw_bernd_bahr",3],["bsw_sascha_jecht",0],["bsw_thomas_kachel",3],["bsw_danilo_streller",1],["bsw_ralf_pannowitsch",1],["bsw_eric_recke",1],["bsw_marco_zscherny",3],["freie_fraktion_jan_paul_helbig",1],["freie_fraktion_thomas_kumbernuss",1],["freie_fraktion_sven_morlok",1],["freie_fraktion_katharina_subat",1],["name:Dr. Reinhold, Klaus-Peter",4],["freie_waehler_stefan_rieger",1],["buergermeister_burkhard_jung",1]]}]};
+
+  // Vote codes, as emitted by build_votes_data().
+  var ABSENT = 0, JA = 1, NEIN = 2, ENTH = 3, NO_VOTE = 4;
+  var CODE_LABEL = ['abwesend', 'Ja', 'Nein', 'Enthaltung', 'ohne Stimme'];
+  var CODE_CLASS = ['v-absent', 'v-ja', 'v-nein', 'v-enth', 'v-none'];
+
+  var VOTES_BY_KEY = {};
+  DATA.votes.forEach(function(v) { VOTES_BY_KEY[v.key] = v; });
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function personName(pid) {
+    var p = DATA.persons[pid];
+    return p ? p.name : pid;
+  }
+
+  /** The Fraktion printed on this vote's screen, which may predate a change. */
+  function rowGroup(row) {
+    if (row.length > 2 && row[2]) return row[2];
+    var p = DATA.persons[row[0]];
+    return p ? p.group : '';
+  }
+
+  function findRow(vote, pid) {
+    for (var i = 0; i < vote.rows.length; i++) {
+      if (vote.rows[i][0] === pid) return vote.rows[i];
+    }
+    return null;
+  }
+
+  /** Ja/Nein/Enthaltung counts for one Fraktion within one vote. */
+  function groupSplit(vote, group) {
+    var s = { ja: 0, nein: 0, enthaltung: 0, none: 0, absent: 0, total: 0 };
+    vote.rows.forEach(function(row) {
+      if (rowGroup(row) !== group) return;
+      s.total++;
+      if (row[1] === JA) s.ja++;
+      else if (row[1] === NEIN) s.nein++;
+      else if (row[1] === ENTH) s.enthaltung++;
+      else if (row[1] === NO_VOTE) s.none++;
+      else s.absent++;
+    });
+    return s;
+  }
+
+  function formatSeconds(sec) {
+    var h = Math.floor(sec / 3600);
+    var m = Math.floor((sec % 3600) / 60);
+    var s = sec % 60;
+    return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  function videoHref(vote) {
+    return 'index.html?session=' + encodeURIComponent(vote.session) + '&t=' + vote.start_sec;
+  }
+
+  function tallyBar(vote) {
+    var t = vote.tally;
+    var total = t.ja + t.nein + t.enthaltung;
+    function pct(n) { return total ? (n / total * 100).toFixed(2) + '%' : '0%'; }
+    return '<span class="bar">' +
+      '<span class="b-ja" style="width:' + pct(t.ja) + '"></span>' +
+      '<span class="b-nein" style="width:' + pct(t.nein) + '"></span>' +
+      '<span class="b-enth" style="width:' + pct(t.enthaltung) + '"></span>' +
+      '</span><span class="tally-nums">' +
+      '<b class="v-ja">' + t.ja + '</b> / <b class="v-nein">' + t.nein + '</b>' +
+      ' / <b class="v-enth">' + t.enthaltung + '</b></span>';
+  }
+
+  function chip(code) {
+    return '<span class="chip ' + CODE_CLASS[code] + '">' + CODE_LABEL[code] + '</span>';
+  }
+
+  // ---------------------------------------------------------------- routing
+
+  function parseHash() {
+    var raw = location.hash.replace(/^#/, '') || '/';
+    var qi = raw.indexOf('?');
+    var path = qi >= 0 ? raw.slice(0, qi) : raw;
+    var params = new URLSearchParams(qi >= 0 ? raw.slice(qi + 1) : '');
+    return { path: path, params: params };
+  }
+
+  function listHref(params) {
+    var qs = params.toString();
+    return '#/' + (qs ? '?' + qs : '');
+  }
+
+  function personHref(pid) { return '#/person/' + encodeURIComponent(pid); }
+  function voteHref(key) { return '#/vote/' + encodeURIComponent(key); }
+
+  function route() {
+    var r = parseHash();
+    var parts = r.path.split('/').filter(function(p) { return p !== ''; });
+    if (parts[0] === 'vote' && parts[1]) {
+      var vote = VOTES_BY_KEY[decodeURIComponent(parts[1])];
+      if (vote) return renderVote(vote);
+    } else if (parts[0] === 'person' && parts[1]) {
+      var pid = decodeURIComponent(parts[1]);
+      if (DATA.persons[pid]) return renderPerson(pid);
+    }
+    renderList(r.params);
+  }
+
+  // ------------------------------------------------------------- list view
+
+  function renderList(params) {
+    var query = (params.get('q') || '').trim().toLowerCase();
+    var group = params.get('group') || '';
+    var person = params.get('person') || '';
+    var session = params.get('session') || '';
+    if (person && !DATA.persons[person]) person = '';
+    if (DATA.groups.indexOf(group) === -1) group = '';
+    if (!DATA.sessions[session]) session = '';
+
+    var matches = DATA.votes.filter(function(v) {
+      if (session && v.session !== session) return false;
+      if (!query) return true;
+      var hay = (v.agenda + ' ' + v.reference + ' ' + v.title).toLowerCase();
+      return hay.indexOf(query) !== -1;
+    });
+
+    var html = '<div class="filters">' +
+      '<input id="f-query" type="text" placeholder="Vorlage, Antrag oder TOP suchen…" value="' + esc(params.get('q') || '') + '" />' +
+      selectHtml('f-session', 'Alle Sitzungen', Object.keys(DATA.sessions).sort().reverse().map(function(s) {
+        return { value: s, label: DATA.sessions[s].title };
+      }), session) +
+      selectHtml('f-group', 'Alle Fraktionen', DATA.groups.map(function(g) {
+        return { value: g, label: g };
+      }), group) +
+      personSelectHtml(person) +
+      '</div>';
+
+    html += '<div class="result-count">' + matches.length + ' von ' + DATA.votes.length +
+      ' Abstimmungen</div>';
+
+    if (!matches.length) {
+      html += '<div class="empty">Keine Abstimmung gefunden.</div>';
+    } else {
+      html += '<table><thead><tr>' +
+        '<th class="col-date">Datum</th><th class="col-top">TOP</th>' +
+        '<th class="col-ref">Vorlage</th><th>Titel</th>' +
+        (person ? '<th>' + esc(personName(person)) + '</th>' : '') +
+        (group ? '<th>' + esc(group) + '</th>' : '') +
+        '<th class="col-result">Ergebnis</th></tr></thead><tbody>';
+
+      matches.forEach(function(v) {
+        var cells = '<td class="col-date">' + esc(DATA.sessions[v.session].title) + '</td>' +
+          '<td class="col-top">' + esc(v.agenda) + '</td>' +
+          '<td class="col-ref">' + (v.vorlage
+            ? '<a href="' + esc(v.vorlage) + '" target="_blank" rel="noopener noreferrer">' + esc(v.reference) + ' ↗</a>'
+            : esc(v.reference)) + '</td>' +
+          '<td class="col-title">' + esc(v.title) + '</td>';
+
+        if (person) {
+          var row = findRow(v, person);
+          cells += '<td>' + (row ? chip(row[1]) : '<span class="v-absent">nicht erfasst</span>') + '</td>';
+        }
+        if (group) {
+          var s = groupSplit(v, group);
+          cells += '<td class="tally-nums"><b class="v-ja">' + s.ja + '</b> / <b class="v-nein">' +
+            s.nein + '</b> / <b class="v-enth">' + s.enthaltung + '</b></td>';
+        }
+        cells += '<td class="col-result">' + tallyBar(v) + '</td>';
+        html += '<tr data-key="' + esc(v.key) + '">' + cells + '</tr>';
+      });
+      html += '</tbody></table>';
+    }
+
+    var view = document.getElementById('view');
+    view.innerHTML = html;
+
+    view.querySelectorAll('tbody tr').forEach(function(tr) {
+      tr.addEventListener('click', function(e) {
+        if (e.target.closest('a')) return;
+        location.hash = voteHref(tr.dataset.key);
+      });
+    });
+
+    wireFilters(params);
+  }
+
+  function selectHtml(id, placeholder, options, selected) {
+    var html = '<select id="' + id + '"><option value="">' + placeholder + '</option>';
+    options.forEach(function(o) {
+      html += '<option value="' + esc(o.value) + '"' +
+        (o.value === selected ? ' selected' : '') + '>' + esc(o.label) + '</option>';
+    });
+    return html + '</select>';
+  }
+
+  function personSelectHtml(selected) {
+    var byGroup = {};
+    Object.keys(DATA.persons).forEach(function(pid) {
+      var g = DATA.persons[pid].group || 'ohne Fraktion';
+      (byGroup[g] = byGroup[g] || []).push(pid);
+    });
+    var html = '<select id="f-person"><option value="">Alle Mitglieder</option>';
+    Object.keys(byGroup).sort().forEach(function(g) {
+      html += '<optgroup label="' + esc(g) + '">';
+      byGroup[g].sort(function(a, b) {
+        return personName(a).localeCompare(personName(b), 'de');
+      }).forEach(function(pid) {
+        html += '<option value="' + esc(pid) + '"' + (pid === selected ? ' selected' : '') +
+          '>' + esc(personName(pid)) + '</option>';
+      });
+      html += '</optgroup>';
+    });
+    return html + '</select>';
+  }
+
+  function wireFilters(params) {
+    function update(key, value) {
+      var next = new URLSearchParams(params.toString());
+      if (value) next.set(key, value); else next.delete(key);
+      location.hash = listHref(next);
+    }
+
+    var q = document.getElementById('f-query');
+    var timer = null;
+    q.addEventListener('input', function() {
+      clearTimeout(timer);
+      timer = setTimeout(function() {
+        var pos = q.selectionStart;
+        update('q', q.value.trim());
+        var again = document.getElementById('f-query');
+        if (again) { again.focus(); again.setSelectionRange(pos, pos); }
+      }, 200);
+    });
+
+    [['f-session', 'session'], ['f-group', 'group'], ['f-person', 'person']].forEach(function(pair) {
+      document.getElementById(pair[0]).addEventListener('change', function() {
+        update(pair[1], this.value);
+      });
+    });
+  }
+
+  // ------------------------------------------------------------- vote view
+
+  function renderVote(vote) {
+    var t = vote.tally;
+    var html = '<a class="back" href="' + listHref(new URLSearchParams()) + '">← Alle Abstimmungen</a>' +
+      '<div class="detail-head">' +
+      '<h2>' + esc(vote.title || vote.agenda) + '</h2>' +
+      '<div class="detail-meta">' +
+      '<span>' + esc(DATA.sessions[vote.session].title) + '</span>' +
+      '<span>TOP ' + esc(vote.agenda) + '</span>' +
+      (vote.reference ? '<span>' + esc(vote.reference) + '</span>' : '') +
+      '<span>' + formatSeconds(vote.start_sec) + '</span>' +
+      '</div></div>';
+
+    html += '<div class="detail-actions">';
+    if (DATA.sessions[vote.session].video) {
+      html += '<a class="action" href="' + videoHref(vote) + '">▶ Im Video ansehen</a>';
+    }
+    if (vote.vorlage) {
+      html += '<a class="action" href="' + esc(vote.vorlage) +
+        '" target="_blank" rel="noopener noreferrer">Vorlage im Ratsinformationssystem ↗</a>';
+    }
+    html += '</div>';
+
+    html += '<div class="summary">' +
+      stat(t.ja, 'Ja') + stat(t.nein, 'Nein') + stat(t.enthaltung, 'Enthaltung') +
+      stat(vote.cast, 'Abgegeben') + stat(vote.present, 'Anwesend') + '</div>';
+
+    // Two separate guarantees, per voting-analysis.md: the screen's own totals
+    // adding up says nothing about whether the vote had finished.
+    html += '<div class="quality">' +
+      (vote.checksum_ok
+        ? '<span class="ok">✓</span> Die Summen des Abstimmungsbildschirms stimmen mit den ausgezählten Stimmen überein.'
+        : '<span class="warn">!</span> Die Summen des Abstimmungsbildschirms stimmen nicht mit den ausgezählten Stimmen überein.') +
+      '<br />Das Ergebnis war beim Auslesen seit ' + vote.settled_sec + ' s unverändert.' +
+      '</div>';
+
+    var groups = {};
+    vote.rows.forEach(function(row) {
+      var g = rowGroup(row) || 'ohne Fraktion';
+      (groups[g] = groups[g] || []).push(row);
+    });
+
+    Object.keys(groups).sort().forEach(function(g) {
+      var s = groupSplit(vote, g);
+      html += '<div class="group-block"><div class="group-head">' +
+        '<h3>' + esc(g) + '</h3><span class="split">' +
+        '<b class="v-ja">' + s.ja + '</b> Ja · <b class="v-nein">' + s.nein + '</b> Nein · ' +
+        '<b class="v-enth">' + s.enthaltung + '</b> Enthaltung</span></div><div class="member-grid">';
+
+      groups[g].sort(function(a, b) {
+        return personName(a[0]).localeCompare(personName(b[0]), 'de');
+      }).forEach(function(row) {
+        html += '<div class="member">' +
+          '<a class="mname" href="' + personHref(row[0]) + '">' + esc(personName(row[0])) + '</a>' +
+          chip(row[1]) + '</div>';
+      });
+      html += '</div></div>';
+    });
+
+    document.getElementById('view').innerHTML = html;
+  }
+
+  function stat(n, label) {
+    return '<div class="stat"><div class="n">' + n + '</div><div class="l">' + esc(label) + '</div></div>';
+  }
+
+  // ----------------------------------------------------------- person view
+
+  function renderPerson(pid) {
+    var person = DATA.persons[pid];
+    var counts = [0, 0, 0, 0, 0];
+    var withGroup = 0, castTotal = 0;
+    var rows = [];
+
+    DATA.votes.forEach(function(v) {
+      var row = findRow(v, pid);
+      if (!row) return;
+      counts[row[1]]++;
+      rows.push({ vote: v, code: row[1] });
+      if (row[1] === JA || row[1] === NEIN || row[1] === ENTH) {
+        castTotal++;
+        if (votedWithGroup(v, row)) withGroup++;
+      }
+    });
+
+    var attended = rows.length - counts[ABSENT];
+
+    var html = '<a class="back" href="' + listHref(new URLSearchParams()) + '">← Alle Abstimmungen</a>' +
+      '<div class="detail-head"><h2>' + esc(person.name) + '</h2>' +
+      '<div class="detail-meta"><span>' + esc(person.group || 'ohne Fraktion') + '</span>' +
+      '<span>' + rows.length + ' erfasste Abstimmungen</span></div></div>';
+
+    if (person.unmatched) {
+      html += '<div class="note">Dieser Name konnte keinem Eintrag in persons.json zugeordnet ' +
+        'werden. Die Stimmen stammen unverändert vom Abstimmungsbildschirm.</div>';
+    }
+
+    html += '<div class="summary">' +
+      stat(counts[JA], 'Ja') + stat(counts[NEIN], 'Nein') + stat(counts[ENTH], 'Enthaltung') +
+      stat(counts[NO_VOTE], 'Ohne Stimme') + stat(counts[ABSENT], 'Abwesend') +
+      stat(attended ? Math.round(castTotal / attended * 100) + '%' : 'n/a', 'Teilnahme') +
+      stat(castTotal ? Math.round(withGroup / castTotal * 100) + '%' : 'n/a', 'Fraktionstreue') +
+      '</div>';
+
+    html += '<div class="quality">Teilnahme: abgegebene Stimmen von den Abstimmungen, bei denen ' +
+      'die Person anwesend war. Fraktionstreue: Anteil der abgegebenen Stimmen, die der Mehrheit ' +
+      'der eigenen Fraktion entsprachen.</div>';
+
+    if (!rows.length) {
+      html += '<div class="empty">Keine Abstimmungen erfasst.</div>';
+    } else {
+      html += '<table><thead><tr><th class="col-date">Datum</th><th class="col-top">TOP</th>' +
+        '<th class="col-ref">Vorlage</th><th>Titel</th><th>Stimme</th>' +
+        '<th class="col-result">Ergebnis</th></tr></thead><tbody>';
+      rows.forEach(function(r) {
+        var v = r.vote;
+        html += '<tr data-key="' + esc(v.key) + '">' +
+          '<td class="col-date">' + esc(DATA.sessions[v.session].title) + '</td>' +
+          '<td class="col-top">' + esc(v.agenda) + '</td>' +
+          '<td class="col-ref">' + (v.vorlage
+            ? '<a href="' + esc(v.vorlage) + '" target="_blank" rel="noopener noreferrer">' + esc(v.reference) + ' ↗</a>'
+            : esc(v.reference)) + '</td>' +
+          '<td class="col-title">' + esc(v.title) + '</td>' +
+          '<td>' + chip(r.code) + '</td>' +
+          '<td class="col-result">' + tallyBar(v) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+
+    var view = document.getElementById('view');
+    view.innerHTML = html;
+    view.querySelectorAll('tbody tr').forEach(function(tr) {
+      tr.addEventListener('click', function(e) {
+        if (e.target.closest('a')) return;
+        location.hash = voteHref(tr.dataset.key);
+      });
+    });
+  }
+
+  /** Did this row match the most common cast vote in its own Fraktion?
+      A tie counts as a match: the person is with a plurality either way. */
+  function votedWithGroup(vote, row) {
+    var s = groupSplit(vote, rowGroup(row));
+    var mine = row[1] === JA ? s.ja : (row[1] === NEIN ? s.nein : s.enthaltung);
+    return mine >= Math.max(s.ja, s.nein, s.enthaltung);
+  }
+
+  window.addEventListener('hashchange', route);
+  route();
+</script>
+
+</body>
+</html>
